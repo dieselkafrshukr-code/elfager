@@ -7,7 +7,6 @@
   <title>ZERO — Minimalist Clothing</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -329,32 +328,39 @@
         <i data-lucide="x" class="close-btn" id="close-profile"></i>
       </div>
       <div id="logged-out-view">
-        <p style="margin-bottom: 2rem; opacity: 0.6;">Sign in to sync your bag and orders across devices.</p>
-        <button id="supabase-login" class="btn btn-primary"
+        <p style="margin-bottom: 2rem; opacity: 0.6;">Sign in with Firebase to sync your preferences.</p>
+        <button id="firebase-login" class="btn btn-primary"
           style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
           <i data-lucide="log-in" style="width: 18px;"></i> Continue with Google
         </button>
       </div>
       <div id="logged-in-view" style="display: none; text-align: center;">
         <p id="user-greeting" style="margin-bottom: 2rem; font-size: 1.2rem;"></p>
-        <button id="supabase-logout" class="btn" style="width: 100%;">Sign Out</button>
+        <button id="firebase-logout" class="btn" style="width: 100%;">Sign Out</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // --- SUPABASE CONFIG ---
-    // Your Admin Key: sb_publishable_VNa03WFRTTcIv9QflwdNEg_2AL_Doec
-    // Need Project URL to initialize. Using a placeholder for now.
-    const SUPABASE_URL = 'https://kmfvorlfugunelntosju.supabase.co'; // Standard pattern
-    const SUPABASE_KEY = 'sb_publishable_VNa03WFRTTcIv9QflwdNEg_2AL_Doec';
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    let supabase;
-    try {
-      supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    } catch (e) {
-      console.error("Supabase fail:", e);
-    }
+    // --- FIREBASE CONFIG ---
+    // REPLACE THIS WITH YOUR CONFIG FROM FIREBASE CONSOLE
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
     // Initialize Icons
     lucide.createIcons();
@@ -385,46 +391,50 @@
     setupSidebar('cart-btn', 'cart-sidebar', 'close-cart');
     setupSidebar('login-btn', 'profile-sidebar', 'close-profile');
 
-    // --- AUTH LOGIC ---
+    // --- AUTH LOGIC (FIREBASE) ---
     const loggedOutView = document.getElementById('logged-out-view');
     const loggedInView = document.getElementById('logged-in-view');
     const userGreeting = document.getElementById('user-greeting');
     const userIcon = document.getElementById('user-icon');
 
-    async function updateAuthUI() {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
+    onAuthStateChanged(auth, (user) => {
       if (user) {
         loggedOutView.style.display = 'none';
         loggedInView.style.display = 'block';
-        userGreeting.innerText = `Hello, ${user.user_metadata.full_name || 'User'}`;
-        if (user.user_metadata.avatar_url) {
+        userGreeting.innerText = `Welcome, ${user.displayName}`;
+
+        if (user.photoURL) {
           const img = document.createElement('img');
-          img.src = user.user_metadata.avatar_url;
+          img.src = user.photoURL;
           img.className = 'user-avatar';
-          userIcon.replaceWith(img);
+          img.id = 'user-icon';
+          document.getElementById('user-icon').replaceWith(img);
         }
       } else {
         loggedOutView.style.display = 'block';
         loggedInView.style.display = 'none';
+        // Reset user icon if needed
       }
-    }
+    });
 
-    document.getElementById('supabase-login').addEventListener('click', async () => {
-      if (!supabase) return;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+    document.getElementById('firebase-login').addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error("Auth error:", error);
+        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+          alert("Please provide your Firebase config in index.html");
+        } else {
+          alert(error.message);
+        }
+      }
+    });
+
+    document.getElementById('firebase-logout').addEventListener('click', () => {
+      signOut(auth).then(() => {
+        window.location.reload();
       });
-      if (error) alert(error.message);
     });
-
-    document.getElementById('supabase-logout').addEventListener('click', async () => {
-      if (!supabase) return;
-      await supabase.auth.signOut();
-      window.location.reload();
-    });
-
-    updateAuthUI();
 
     // Hero Animations
     gsap.from("#hero-title", { y: 100, opacity: 0, duration: 1.5, ease: "expo.out", delay: 0.2 });
