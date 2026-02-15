@@ -236,12 +236,21 @@ logoutBtn.addEventListener('click', () => {
 // Auth State Monitor
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Check if user is Admin in Firestore (Wait for now, assume all authenticated in this panel for staging)
-        loginOverlay.style.display = 'none';
-        sidebar.style.display = 'flex';
-        mainContent.style.display = 'block';
+        // Double check in Firestore admins collection
+        const adminRef = doc(db, "admins", user.email);
+        const adminSnap = await getDoc(adminRef);
 
-        loadStatistics();
+        if (adminSnap.exists()) {
+            loginOverlay.style.display = 'none';
+            sidebar.style.display = 'flex';
+            mainContent.style.display = 'block';
+            document.getElementById('current-user-tag').innerText = `${adminSnap.data().role}: ${user.email}`;
+            loadStatistics();
+        } else {
+            alert("This account is not registered as an Admin in Firestore.");
+            await signOut(auth);
+            window.location.reload();
+        }
     } else {
         loginOverlay.style.display = 'flex';
         sidebar.style.display = 'none';
