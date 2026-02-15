@@ -419,14 +419,18 @@
     });
 
     document.getElementById('firebase-login').addEventListener('click', async () => {
+      console.log("Login button clicked");
       try {
-        await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(auth, provider);
+        console.log("Login success:", result.user);
       } catch (error) {
-        console.error("Auth error:", error);
-        if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-          alert("Please provide your Firebase config in index.html");
+        console.error("Auth error details:", error);
+        if (error.code === 'auth/operation-not-allowed') {
+          alert("خطأ: يجب تفعيل تسجيل الدخول بجوجل من داخل Firebase Console (Authentication > Sign-in method).");
+        } else if (error.code === 'auth/unauthorized-domain') {
+          alert("خطأ: هذا النطاق (Domain) غير مصرح به. تأكد من تشغيل الموقع عبر خادم (Localhost) وليس بفتح الملف مباشرة.");
         } else {
-          alert(error.message);
+          alert("فشل تسجيل الدخول: " + error.message);
         }
       }
     });
