@@ -235,21 +235,30 @@ logoutBtn.addEventListener('click', () => {
 
 // Auth State Monitor
 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // Double check in Firestore admins collection
-        const adminRef = doc(db, "admins", user.email);
-        const adminSnap = await getDoc(adminRef);
+    console.log("Auth State Changed. User:", user ? user.email : "No User");
 
-        if (adminSnap.exists()) {
-            loginOverlay.style.display = 'none';
-            sidebar.style.display = 'flex';
-            mainContent.style.display = 'block';
-            document.getElementById('current-user-tag').innerText = `${adminSnap.data().role}: ${user.email}`;
-            loadStatistics();
-        } else {
-            alert("This account is not registered as an Admin in Firestore.");
+    if (user) {
+        try {
+            // Let's first try to see if we can just get the doc
+            const adminRef = doc(db, "admins", user.email);
+            const adminSnap = await getDoc(adminRef);
+
+            if (adminSnap.exists()) {
+                console.log("Admin verified:", adminSnap.data());
+                loginOverlay.style.display = 'none';
+                sidebar.style.display = 'flex';
+                mainContent.style.display = 'block';
+                document.getElementById('current-user-tag').innerText = `${adminSnap.data().role || 'staff'}: ${user.email}`;
+                loadStatistics();
+            } else {
+                console.error("User exists in Auth but not in Firestore 'admins' collection");
+                alert("تم تسجيل الدخول بنجاح، ولكن هذا الإيميل غير موجود في قائمة المحررين (Firestore Admins). رقم الإيميل: " + user.email);
+                await signOut(auth);
+            }
+        } catch (error) {
+            console.error("Firestore read error:", error);
+            alert("خطأ في قراءة البيانات: " + error.message + "\nتأكد من إعداد القواعد (Rules) في Firebase بشكل صحيح.");
             await signOut(auth);
-            window.location.reload();
         }
     } else {
         loginOverlay.style.display = 'flex';
