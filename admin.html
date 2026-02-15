@@ -135,7 +135,8 @@
             border: 1px solid var(--border-color);
         }
 
-        input {
+        input,
+        select {
             width: 100%;
             padding: 1rem;
             margin: 10px 0;
@@ -145,7 +146,7 @@
             color: #fff;
         }
 
-        button {
+        .btn {
             width: 100%;
             padding: 1rem;
             margin-top: 20px;
@@ -155,6 +156,15 @@
             border-radius: 10px;
             font-weight: 800;
             cursor: pointer;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -166,21 +176,21 @@
             <p style="opacity: 0.5; margin-bottom: 2rem;">Authorized Personnel Only</p>
             <input type="email" id="admin-email" placeholder="Email Address">
             <input type="password" id="admin-pass" placeholder="Password">
-            <button id="admin-login-btn">LOGIN</button>
+            <button id="admin-login-btn" class="btn">LOGIN</button>
         </div>
     </div>
 
     <aside class="sidebar" style="display: none;">
         <div class="sidebar-logo">ZERO<span>.</span></div>
         <nav>
-            <a href="#" class="nav-item active"><i data-lucide="layout-dashboard"></i> Overview</a>
-            <a href="#" class="nav-item"><i data-lucide="package"></i> Products</a>
-            <a href="#" class="nav-item"><i data-lucide="shopping-cart"></i> Orders</a>
-            <a href="#" class="nav-item"><i data-lucide="truck"></i> Shipping</a>
-            <a href="#" class="nav-item"><i data-lucide="users"></i> Management</a>
+            <div class="nav-item active"><i data-lucide="layout-dashboard"></i> Overview</div>
+            <div class="nav-item"><i data-lucide="package"></i> Products</div>
+            <div class="nav-item"><i data-lucide="shopping-cart"></i> Orders</div>
+            <div class="nav-item"><i data-lucide="truck"></i> Shipping</div>
+            <div class="nav-item"><i data-lucide="users"></i> Management</div>
         </nav>
         <div style="margin-top: auto;">
-            <a href="#" class="nav-item" id="admin-logout"><i data-lucide="log-out"></i> Logout</a>
+            <div class="nav-item" id="admin-logout"><i data-lucide="log-out"></i> Logout</div>
         </div>
     </aside>
 
@@ -190,46 +200,175 @@
             <div id="current-user-tag" style="opacity: 0.5;">Admin</div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Products</h3>
-                <div class="value" id="stat-products">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Total Orders</h3>
-                <div class="value" id="stat-orders">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Daily Sales</h3>
-                <div class="value" id="stat-sales-today">0%</div>
-                <div class="trend" id="sales-trend" style="color: var(--accent-color);">
-                    <i data-lucide="arrow-up-right"></i> +5% vs last week
+        <div id="dynamic-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <div class="value" id="stat-products">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Orders</h3>
+                    <div class="value" id="stat-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Sales Growth</h3>
+                    <div class="value" id="stat-sales-today">0%</div>
+                    <div class="trend" id="sales-trend" style="color: var(--accent-color);">
+                        <i data-lucide="arrow-up-right"></i> Stable
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Visitors</h3>
+                    <div class="value" id="stat-visitors">0</div>
                 </div>
             </div>
-            <div class="stat-card">
-                <h3>Total Visitors</h3>
-                <div class="value" id="stat-visitors">0</div>
-            </div>
-        </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Google Users</h3>
-                <div class="value" id="stat-google">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>FB Users</h3>
-                <div class="value" id="stat-fb">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Guests</h3>
-                <div class="value" id="stat-guests">0</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Google Users</h3>
+                    <div class="value" id="stat-google">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>FB Users</h3>
+                    <div class="value" id="stat-fb">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Guests</h3>
+                    <div class="value" id="stat-guests">0</div>
+                </div>
             </div>
         </div>
     </main>
 
-    <script type="module" src="/src/admin.js"></script>
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
+            authDomain: "m989-5f329.firebaseapp.com",
+            projectId: "m989-5f329",
+            storageBucket: "m989-5f329.firebasestorage.app",
+            messagingSenderId: "617175385217",
+            appId: "1:617175385217:web:2ace1f8e6db4287376f980",
+            measurementId: "G-D8PYFFX4RN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const loginOverlay = document.getElementById('login-overlay');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        // Login
+        document.getElementById('admin-login-btn').addEventListener('click', async () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (e) { alert("Error: " + e.message); }
+        });
+
+        document.getElementById('admin-logout').addEventListener('click', () => signOut(auth));
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const adminSnap = await getDoc(doc(db, "admins", user.email));
+                if (adminSnap.exists()) {
+                    loginOverlay.style.display = 'none';
+                    sidebar.style.display = 'flex';
+                    mainContent.style.display = 'block';
+                    document.getElementById('current-user-tag').innerText = adminSnap.data().role + ": " + user.email;
+                    loadStats();
+                } else {
+                    alert("Unauthorized: Not an admin");
+                    signOut(auth);
+                }
+            } else {
+                loginOverlay.style.display = 'flex';
+                sidebar.style.display = 'none';
+                mainContent.style.display = 'none';
+            }
+        });
+
+        function loadStats() {
+            onSnapshot(collection(db, "products"), (s) => document.getElementById('stat-products').innerText = s.size);
+            onSnapshot(collection(db, "orders"), (s) => document.getElementById('stat-orders').innerText = s.size);
+            onSnapshot(doc(db, "stats", "counters"), (s) => {
+                if (!s.exists()) return;
+                const d = s.data();
+                document.getElementById('stat-visitors').innerText = d.total_visitors || 0;
+                document.getElementById('stat-google').innerText = d.google_users || 0;
+                document.getElementById('stat-fb').innerText = d.fb_users || 0;
+                document.getElementById('stat-guests').innerText = d.guests || 0;
+            });
+        }
+
+        // Navigation Logic
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                const view = item.innerText.trim().toLowerCase();
+                if (view === 'shipping') renderShipping();
+                if (view === 'products') renderProducts();
+                if (view === 'overview') window.location.reload();
+            });
+        });
+
+        async function renderShipping() {
+            const provinces = ["Cairo", "Giza", "Alexandria", "Dakahlia", "Sharqia", "Gharbia", "Monufia", "Beheira", "Kafr El Sheikh", "Damietta", "Port Said", "Ismailia", "Suez", "North Sinai", "South Sinai", "Beni Suef", "Fayoum", "Minya", "Assiut", "Sohag", "Qena", "Luxor", "Aswan", "Red Sea", "New Valley", "Matrouh"];
+            const rates = (await getDoc(doc(db, "settings", "shipping_rates"))).data() || {};
+
+            let html = `<div class="header"><h1>Shipping Rate (EGP)</h1><button id="save-ship" class="btn" style="width:auto">SAVE</button></div>`;
+            html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">`;
+            provinces.forEach(p => {
+                html += `<div style="background:var(--card-bg); padding:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                <label>${p}</label><input type="number" class="ship-in" data-p="${p}" value="${rates[p] || 0}" style="width:80px; margin:0">
+            </div>`;
+            });
+            html += `</div>`;
+            document.getElementById('dynamic-content').innerHTML = html;
+            document.getElementById('save-ship').addEventListener('click', async () => {
+                const newRates = {};
+                document.querySelectorAll('.ship-in').forEach(i => newRates[i.dataset.p] = i.value);
+                await setDoc(doc(db, "settings", "shipping_rates"), newRates);
+                alert("Saved!");
+            });
+        }
+
+        async function renderProducts() {
+            let html = `<div class="header"><h1>Products</h1><button id="toggle-p-form" class="btn" style="width:auto">+ ADD</button></div>`;
+            html += `<div id="p-form" style="display:none; background:var(--card-bg); padding:20px; border-radius:10px; margin-bottom:20px;">
+            <input id="pn" placeholder="Name"> <input id="pp" type="number" placeholder="Price">
+            <button id="save-p" class="btn">SAVE PRODUCT</button>
+        </div><div id="p-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:15px;">Loading...</div>`;
+
+            document.getElementById('dynamic-content').innerHTML = html;
+            document.getElementById('toggle-p-form').onclick = () => document.getElementById('p-form').style.display = 'block';
+
+            onSnapshot(collection(db, "products"), (snap) => {
+                document.getElementById('p-list').innerHTML = snap.docs.map(d => `
+                <div style="background:var(--card-bg); padding:10px; border-radius:10px; text-align:center;">
+                    <div style="height:100px; background:#000; border-radius:5px; margin-bottom:10px;"></div>
+                    <strong>${d.data().name}</strong><br><small>${d.data().price} EGP</small>
+                </div>
+            `).join('');
+            });
+
+            document.getElementById('save-p').onclick = async () => {
+                const name = document.getElementById('pn').value;
+                const price = document.getElementById('pp').value;
+                if (!name || !price) return;
+                await addDoc(collection(db, "products"), { name, price });
+                document.getElementById('p-form').style.display = 'none';
+            };
+        }
+
         lucide.createIcons();
     </script>
 </body>
