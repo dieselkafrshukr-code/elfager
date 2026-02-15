@@ -276,7 +276,7 @@
 <body>
   <div id="app">
     <nav>
-      <div class="logo">Zero</div>
+      <div class="logo" onclick="window.location.reload()">Zero</div>
       <div class="nav-actions">
         <button id="theme-toggle" class="icon-btn">
           <i data-lucide="moon" class="moon"></i>
@@ -328,15 +328,22 @@
         <i data-lucide="x" class="close-btn" id="close-profile"></i>
       </div>
       <div id="logged-out-view">
-        <p style="margin-bottom: 2rem; opacity: 0.6;">Sign in with Firebase to sync your preferences.</p>
-        <button id="firebase-login" class="btn btn-primary"
-          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <p style="margin-bottom: 2rem; opacity: 0.6;">Sign in to sync your bag and orders.</p>
+        <button id="firebase-login-google" class="btn btn-primary"
+          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
           <i data-lucide="log-in" style="width: 18px;"></i> Continue with Google
+        </button>
+        <button id="firebase-login-fb" class="btn"
+          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; border-color: #1877f2; color: #1877f2;">
+          <i data-lucide="facebook" style="width: 18px;"></i> Continue with Facebook
         </button>
       </div>
       <div id="logged-in-view" style="display: none; text-align: center;">
         <p id="user-greeting" style="margin-bottom: 2rem; font-size: 1.2rem;"></p>
         <button id="firebase-logout" class="btn" style="width: 100%;">Sign Out</button>
+        <a href="/admin.html"
+          style="display: block; margin-top: 20px; color: var(--text-color); font-size: 0.8rem; opacity: 0.5;">Admin
+          Dashboard</a>
       </div>
     </div>
   </div>
@@ -344,10 +351,9 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // --- FIREBASE CONFIG ---
-    // REPLACE THIS WITH YOUR CONFIG FROM FIREBASE CONSOLE
     const firebaseConfig = {
       apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
       authDomain: "m989-5f329.firebaseapp.com",
@@ -358,12 +364,12 @@
       measurementId: "G-D8PYFFX4RN"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+    const fbProvider = new FacebookAuthProvider();
 
-    // Initialize Icons
     lucide.createIcons();
 
     // Theme Toggle
@@ -380,26 +386,53 @@
       gsap.fromTo('body', { opacity: 0.9 }, { opacity: 1, duration: 0.4 });
     });
 
-    // Sidebar Logic
     const setupSidebar = (btnId, sidebarId, closeId) => {
       const btn = document.getElementById(btnId);
       const sidebar = document.getElementById(sidebarId);
       const close = document.getElementById(closeId);
-      btn.addEventListener('click', () => sidebar.classList.add('active'));
-      close.addEventListener('click', () => sidebar.classList.remove('active'));
+      if (btn) btn.addEventListener('click', () => sidebar.classList.add('active'));
+      if (close) close.addEventListener('click', () => sidebar.classList.remove('active'));
     };
 
     setupSidebar('cart-btn', 'cart-sidebar', 'close-cart');
     setupSidebar('login-btn', 'profile-sidebar', 'close-profile');
 
-    // --- AUTH LOGIC (FIREBASE) ---
     const loggedOutView = document.getElementById('logged-out-view');
     const loggedInView = document.getElementById('logged-in-view');
     const userGreeting = document.getElementById('user-greeting');
-    const userIcon = document.getElementById('user-icon');
+
+    // Track Visitors
+    async function trackVisitor(user = null) {
+      const statsRef = doc(db, "stats", "counters");
+      const snap = await getDoc(statsRef);
+      let data = snap.exists() ? snap.data() : { total_visitors: 0, google_users: 0, fb_users: 0, guests: 0 };
+
+      if (!sessionStorage.getItem('visited')) {
+        data.total_visitors = (data.total_visitors || 0) + 1;
+        sessionStorage.setItem('visited', 'true');
+      }
+
+      if (user) {
+        const provider = user.providerData[0]?.providerId;
+        if (provider === 'google.com' && !localStorage.getItem('tracked_google')) {
+          data.google_users = (data.google_users || 0) + 1;
+          localStorage.setItem('tracked_google', 'true');
+        }
+        if (provider === 'facebook.com' && !localStorage.getItem('tracked_fb')) {
+          data.fb_users = (data.fb_users || 0) + 1;
+          localStorage.setItem('tracked_fb', 'true');
+        }
+      } else if (!localStorage.getItem('tracked_guest')) {
+        data.guests = (data.guests || 0) + 1;
+        localStorage.setItem('tracked_guest', 'true');
+      }
+
+      await setDoc(statsRef, data, { merge: true });
+    }
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        trackVisitor(user);
         loggedOutView.style.display = 'none';
         loggedInView.style.display = 'block';
         userGreeting.innerText = `Welcome, ${user.displayName}`;
@@ -409,39 +442,28 @@
           img.src = user.photoURL;
           img.className = 'user-avatar';
           img.id = 'user-icon';
-          document.getElementById('user-icon').replaceWith(img);
+          const icon = document.getElementById('user-icon');
+          if (icon) icon.replaceWith(img);
         }
       } else {
+        trackVisitor();
         loggedOutView.style.display = 'block';
         loggedInView.style.display = 'none';
-        // Reset user icon if needed
       }
     });
 
-    document.getElementById('firebase-login').addEventListener('click', async () => {
-      console.log("Login button clicked");
-      try {
-        const result = await signInWithPopup(auth, provider);
-        console.log("Login success:", result.user);
-      } catch (error) {
-        console.error("Auth error details:", error);
-        if (error.code === 'auth/operation-not-allowed') {
-          alert("خطأ: يجب تفعيل تسجيل الدخول بجوجل من داخل Firebase Console (Authentication > Sign-in method).");
-        } else if (error.code === 'auth/unauthorized-domain') {
-          alert("خطأ: هذا النطاق (Domain) غير مصرح به. تأكد من تشغيل الموقع عبر خادم (Localhost) وليس بفتح الملف مباشرة.");
-        } else {
-          alert("فشل تسجيل الدخول: " + error.message);
-        }
-      }
+    document.getElementById('firebase-login-google').addEventListener('click', async () => {
+      try { await signInWithPopup(auth, googleProvider); } catch (e) { alert(e.message); }
+    });
+
+    document.getElementById('firebase-login-fb').addEventListener('click', async () => {
+      try { await signInWithPopup(auth, fbProvider); } catch (e) { alert(e.message); }
     });
 
     document.getElementById('firebase-logout').addEventListener('click', () => {
-      signOut(auth).then(() => {
-        window.location.reload();
-      });
+      signOut(auth).then(() => window.location.reload());
     });
 
-    // Hero Animations
     gsap.from("#hero-title", { y: 100, opacity: 0, duration: 1.5, ease: "expo.out", delay: 0.2 });
     gsap.from("#hero-desc", { y: 30, opacity: 0, duration: 1.2, ease: "power3.out", delay: 0.8 });
     gsap.from("#hero-cta", { y: 20, opacity: 0, duration: 1, ease: "power3.out", delay: 1.1 });
