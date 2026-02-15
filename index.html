@@ -117,7 +117,7 @@
       color: var(--bg-color);
     }
 
-    /* Real Products Section */
+    /* Store Section */
     .products-section {
       padding: 8rem 5%;
       border-top: 1px solid var(--border-color);
@@ -164,7 +164,7 @@
       margin-right: 8px;
     }
 
-    /* Sidebars */
+    /* Sidebar Styles */
     .sidebar {
       position: fixed;
       right: -100%;
@@ -217,6 +217,7 @@
         <i data-lucide="moon" class="moon"></i>
         <i data-lucide="sun" class="sun"></i>
       </button>
+      <button id="btn-cart" class="icon-btn"><i data-lucide="shopping-bag"></i></button>
       <button id="login-btn" class="icon-btn"><i data-lucide="user" id="user-icon"></i></button>
     </div>
   </nav>
@@ -247,8 +248,8 @@
     </div>
     <div id="logged-in-view" style="display:none; text-align:center;">
       <p id="user-greeting" style="margin-bottom:2rem; font-size:1.2rem;"></p>
-      <a href="/admin.html" id="admin-link" style="display:none; margin-bottom:20px; color:inherit; opacity:0.6;">Admin
-        Dashboard</a>
+      <a href="/admin.html" id="admin-link"
+        style="display:none; margin-bottom:20px; color:inherit; opacity:0.6; text-decoration:none; font-weight:800; border:1px solid #333; padding:10px; display:inline-block; width:100%">DASHBOARD</a>
       <button id="logout-btn" class="btn" style="width:100%;">Sign Out</button>
     </div>
   </div>
@@ -256,7 +257,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
@@ -274,7 +275,7 @@
 
     lucide.createIcons();
 
-    // Theme Toggle
+    // --- THEME ---
     const themeToggle = document.getElementById('theme-toggle');
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.body.setAttribute('data-theme', savedTheme);
@@ -284,67 +285,71 @@
       localStorage.setItem('theme', next);
     };
 
-    // Sidebar
+    // --- SIDEBAR ---
     const loginBtn = document.getElementById('login-btn');
     const sidebar = document.getElementById('profile-sidebar');
     loginBtn.onclick = () => sidebar.classList.add('active');
     document.getElementById('close-profile').onclick = () => sidebar.classList.remove('active');
 
-    // Products Real-time Loading
-    onSnapshot(collection(db, "products"), snap => {
+    // --- PRODUCTS SYNC ---
+    onSnapshot(query(collection(db, "products"), orderBy("createdAt", "desc")), snap => {
       const list = document.getElementById('main-products-list');
-      list.innerHTML = snap.docs.map(doc => {
-        const p = doc.data();
-        return `
+      list.innerHTML = "";
+      snap.forEach(docSnap => {
+        const p = docSnap.data();
+        if (p.visible === false) return; // Skip hidden products
+        list.innerHTML += `
                     <div class="product-card">
-                        <img src="${p.mainImage}" class="product-img">
+                        <img src="${p.main_image}" class="product-img">
                         <div class="product-info">
                             <h3>${p.name}</h3>
                             <p style="opacity:0.5; font-size:0.8rem; margin:5px 0;">${p.category}</p>
                             <div class="p-price">
-                                ${p.priceOld ? `<span class="p-old-price">${p.priceOld} EGP</span>` : ''}
-                                <span>${p.priceNow} EGP</span>
+                                ${p.price_old ? `<span class="p-old-price">${p.price_old} EGP</span>` : ''}
+                                <span>${p.price_now} EGP</span>
                             </div>
                         </div>
                     </div>
                 `;
-      }).join('');
+      });
     });
 
-    // Visitor Tracking
+    // --- VISITOR TRACKING ---
     async function trackVisitor(user = null) {
-      const ref = doc(db, "stats", "counters");
-      const snap = await getDoc(ref);
-      let data = snap.exists() ? snap.data() : { total_visitors: 0, google_users: 0, fb_users: 0, guests: 0 };
+      const statsRef = doc(db, "stats", "counters");
+      const updateData = { total_visitors: increment(1) };
 
       if (!sessionStorage.getItem('v')) {
-        data.total_visitors = (data.total_visitors || 0) + 1;
         sessionStorage.setItem('v', '1');
-        if (!user) data.guests = (data.guests || 0) + 1;
-        await setDoc(ref, data, { merge: true });
+        if (!user) updateData.guests = increment(1);
+        await setDoc(statsRef, updateData, { merge: true });
       }
 
-      if (user && !localStorage.getItem('tracked_' + (user.providerData[0]?.providerId || 'u'))) {
+      if (user) {
         const pid = user.providerData[0]?.providerId;
-        if (pid === 'google.com') data.google_users = (data.google_users || 0) + 1;
-        if (pid === 'facebook.com') data.fb_users = (data.fb_users || 0) + 1;
-        localStorage.setItem('tracked_' + pid, '1');
-        await setDoc(ref, data, { merge: true });
+        if (!localStorage.getItem('tracked_' + (pid || 'u'))) {
+          localStorage.setItem('tracked_' + pid, '1');
+          if (pid === 'google.com') updateData.google_users = increment(1);
+          if (pid === 'facebook.com') updateData.fb_users = increment(1);
+          await setDoc(statsRef, updateData, { merge: true });
+        }
       }
     }
 
     onAuthStateChanged(auth, async (user) => {
       const outView = document.getElementById('logged-out-view');
       const inView = document.getElementById('logged-in-view');
+      const adminLink = document.getElementById('admin-link');
+
       if (user) {
         trackVisitor(user);
         outView.style.display = 'none';
         inView.style.display = 'block';
-        document.getElementById('user-greeting').innerText = `Hello, ${user.displayName || 'User'}`;
+        document.getElementById('user-greeting').innerText = `Hello, ${user.displayName || user.email}`;
 
-        // Show admin link if user is admin
+        // Show Admin Dashboard link if user is in 'admins' collection
         const adminSnap = await getDoc(doc(db, "admins", user.email));
-        if (adminSnap.exists()) document.getElementById('admin-link').style.display = 'block';
+        if (adminSnap.exists()) adminLink.style.display = 'block';
 
         if (user.photoURL) {
           const img = document.createElement('img');
@@ -355,6 +360,7 @@
         trackVisitor();
         outView.style.display = 'block';
         inView.style.display = 'none';
+        adminLink.style.display = 'none';
       }
     });
 
