@@ -41,10 +41,8 @@
       color: var(--text-color);
       transition: background-color 0.5s ease, color 0.5s ease;
       overflow-x: hidden;
-      line-height: 1.6;
     }
 
-    /* Navbar */
     nav {
       position: fixed;
       top: 0;
@@ -62,15 +60,8 @@
     .logo {
       font-size: 1.8rem;
       font-weight: 800;
-      letter-spacing: -1px;
       text-transform: uppercase;
       cursor: pointer;
-    }
-
-    .nav-actions {
-      display: flex;
-      gap: 1.2rem;
-      align-items: center;
     }
 
     .icon-btn {
@@ -86,27 +77,20 @@
       position: relative;
     }
 
-    .icon-btn:hover {
-      background: var(--card-bg);
-      transform: translateY(-2px);
-    }
-
-    /* Hero Section */
     .hero {
       height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 0 5%;
       text-align: center;
+      padding: 0 5%;
     }
 
     .hero h1 {
       font-size: clamp(5rem, 18vw, 12rem);
       font-weight: 800;
       line-height: 0.8;
-      letter-spacing: -0.05em;
       margin-bottom: 2rem;
     }
 
@@ -115,19 +99,12 @@
       max-width: 500px;
       opacity: 0.6;
       margin-bottom: 3rem;
-      font-weight: 300;
-    }
-
-    .cta-group {
-      display: flex;
-      gap: 1.5rem;
     }
 
     .btn {
       padding: 1rem 2.5rem;
       text-decoration: none;
       font-weight: 600;
-      font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 2px;
       transition: var(--transition);
@@ -140,56 +117,54 @@
       color: var(--bg-color);
     }
 
-    .btn-primary:hover {
-      background: transparent;
-      color: var(--accent-color);
-    }
-
-    /* Products Placeholder */
+    /* Real Products Section */
     .products-section {
       padding: 8rem 5%;
       border-top: 1px solid var(--border-color);
     }
 
-    .section-tag {
-      font-size: 0.8rem;
-      letter-spacing: 5px;
-      text-transform: uppercase;
-      opacity: 0.4;
-      margin-bottom: 4rem;
-      display: block;
-      text-align: center;
-    }
-
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2.5rem;
     }
 
     .product-card {
-      aspect-ratio: 3/4;
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
       transition: var(--transition);
-      padding: 2rem;
+      overflow: hidden;
+      position: relative;
     }
 
     .product-card:hover {
       border-color: var(--text-color);
+      transform: translateY(-10px);
     }
 
-    .product-card span {
-      font-size: 0.9rem;
-      opacity: 0.3;
-      letter-spacing: 2px;
+    .product-img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      transition: 0.6s ease;
     }
 
-    /* Sidebar Styles */
+    .product-info {
+      padding: 1.5rem;
+    }
+
+    .p-price {
+      font-weight: 800;
+    }
+
+    .p-old-price {
+      text-decoration: line-through;
+      opacity: 0.4;
+      font-size: 0.8rem;
+      margin-right: 8px;
+    }
+
+    /* Sidebars */
     .sidebar {
       position: fixed;
       right: -100%;
@@ -198,47 +173,13 @@
       height: 100vh;
       background: var(--bg-color);
       z-index: 2000;
-      transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
       padding: 3rem;
+      transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
       border-left: 1px solid var(--border-color);
-      box-shadow: -20px 0 50px rgba(0, 0, 0, 0.05);
     }
 
     .sidebar.active {
       right: 0;
-    }
-
-    .sidebar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4rem;
-    }
-
-    .close-btn {
-      cursor: pointer;
-      opacity: 0.5;
-      transition: 0.3s;
-    }
-
-    .close-btn:hover {
-      opacity: 1;
-    }
-
-    .cart-count {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background: #ff3e3e;
-      color: white;
-      font-size: 0.65rem;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
     }
 
     .user-avatar {
@@ -246,7 +187,6 @@
       height: 32px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1px solid var(--border-color);
     }
 
     [data-theme='dark'] .sun {
@@ -265,94 +205,58 @@
       .sidebar {
         width: 100%;
       }
-
-      .hero h1 {
-        font-size: 4rem;
-      }
     }
   </style>
 </head>
 
 <body>
-  <div id="app">
-    <nav>
-      <div class="logo" onclick="window.location.reload()">Zero</div>
-      <div class="nav-actions">
-        <button id="theme-toggle" class="icon-btn">
-          <i data-lucide="moon" class="moon"></i>
-          <i data-lucide="sun" class="sun"></i>
-        </button>
-        <div style="position: relative;">
-          <button id="cart-btn" class="icon-btn">
-            <i data-lucide="shopping-bag"></i>
-            <span class="cart-count">0</span>
-          </button>
-        </div>
-        <button id="login-btn" class="icon-btn">
-          <i data-lucide="user" id="user-icon"></i>
-        </button>
-      </div>
-    </nav>
-
-    <main class="hero">
-      <h1 id="hero-title">ZERO</h1>
-      <p id="hero-desc">Essential pieces, zero distractions. Designed for those who value the purity of form and the
-        luxury of simplicity.</p>
-      <div class="cta-group" id="hero-cta">
-        <a href="#" class="btn btn-primary">Discover More</a>
-        <a href="#" class="btn" style="opacity: 0.5;">Coming Soon</a>
-      </div>
-    </main>
-
-    <section class="products-section">
-      <span class="section-tag">Collection // Zero 00</span>
-      <div class="grid">
-        <div class="product-card"><span>[ Item_01 ]</span></div>
-        <div class="product-card"><span>[ Item_02 ]</span></div>
-        <div class="product-card"><span>[ Item_03 ]</span></div>
-      </div>
-    </section>
-
-    <!-- Sidebars -->
-    <div id="cart-sidebar" class="sidebar">
-      <div class="sidebar-header">
-        <h2>Your Bag</h2>
-        <i data-lucide="x" class="close-btn" id="close-cart"></i>
-      </div>
-      <p style="opacity: 0.4; text-align: center; margin-top: 50%;">Your bag is empty.</p>
+  <nav>
+    <div class="logo">Zero</div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button id="theme-toggle" class="icon-btn">
+        <i data-lucide="moon" class="moon"></i>
+        <i data-lucide="sun" class="sun"></i>
+      </button>
+      <button id="login-btn" class="icon-btn"><i data-lucide="user" id="user-icon"></i></button>
     </div>
+  </nav>
 
-    <div id="profile-sidebar" class="sidebar">
-      <div class="sidebar-header">
-        <h2>Account</h2>
-        <i data-lucide="x" class="close-btn" id="close-profile"></i>
-      </div>
-      <div id="logged-out-view">
-        <p style="margin-bottom: 2rem; opacity: 0.6;">Sign in to sync your bag and orders.</p>
-        <button id="firebase-login-google" class="btn btn-primary"
-          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
-          <i data-lucide="log-in" style="width: 18px;"></i> Continue with Google
-        </button>
-        <button id="firebase-login-fb" class="btn"
-          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; border-color: #1877f2; color: #1877f2;">
-          <i data-lucide="facebook" style="width: 18px;"></i> Continue with Facebook
-        </button>
-      </div>
-      <div id="logged-in-view" style="display: none; text-align: center;">
-        <p id="user-greeting" style="margin-bottom: 2rem; font-size: 1.2rem;"></p>
-        <button id="firebase-logout" class="btn" style="width: 100%;">Sign Out</button>
-        <a href="/admin.html"
-          style="display: block; margin-top: 20px; color: var(--text-color); font-size: 0.8rem; opacity: 0.5;">Admin
-          Dashboard</a>
-      </div>
+  <main class="hero">
+    <h1 id="hero-title">ZERO</h1>
+    <p>Essential pieces, zero distractions. Designed for those who value purity and simple luxury.</p>
+    <a href="#store" class="btn btn-primary">Shop Now</a>
+  </main>
+
+  <section class="products-section" id="store">
+    <span
+      style="display:block; text-align:center; letter-spacing:5px; text-transform:uppercase; opacity:0.4; margin-bottom:4rem;">Core
+      Collection</span>
+    <div class="grid" id="main-products-list">
+      <!-- Dynamic Products Loading -->
+    </div>
+  </section>
+
+  <div id="profile-sidebar" class="sidebar">
+    <div style="display:flex; justify-content:space-between; margin-bottom:4rem;">
+      <h2>Account</h2><i data-lucide="x" style="cursor:pointer" id="close-profile"></i>
+    </div>
+    <div id="logged-out-view">
+      <button id="fb-login" class="btn"
+        style="width:100%; border-color:#1877f2; color:#1877f2; margin-bottom:10px;">Facebook Login</button>
+      <button id="google-login" class="btn" style="width:100%;">Google Login</button>
+    </div>
+    <div id="logged-in-view" style="display:none; text-align:center;">
+      <p id="user-greeting" style="margin-bottom:2rem; font-size:1.2rem;"></p>
+      <a href="/admin.html" id="admin-link" style="display:none; margin-bottom:20px; color:inherit; opacity:0.6;">Admin
+        Dashboard</a>
+      <button id="logout-btn" class="btn" style="width:100%;">Sign Out</button>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
@@ -367,106 +271,98 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const googleProvider = new GoogleAuthProvider();
-    const fbProvider = new FacebookAuthProvider();
 
     lucide.createIcons();
 
     // Theme Toggle
     const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
     const savedTheme = localStorage.getItem('theme') || 'dark';
-    body.setAttribute('data-theme', savedTheme);
-
-    themeToggle.addEventListener('click', () => {
-      const current = body.getAttribute('data-theme');
-      const next = current === 'light' ? 'dark' : 'light';
-      body.setAttribute('data-theme', next);
+    document.body.setAttribute('data-theme', savedTheme);
+    themeToggle.onclick = () => {
+      const next = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
-      gsap.fromTo('body', { opacity: 0.9 }, { opacity: 1, duration: 0.4 });
-    });
-
-    const setupSidebar = (btnId, sidebarId, closeId) => {
-      const btn = document.getElementById(btnId);
-      const sidebar = document.getElementById(sidebarId);
-      const close = document.getElementById(closeId);
-      if (btn) btn.addEventListener('click', () => sidebar.classList.add('active'));
-      if (close) close.addEventListener('click', () => sidebar.classList.remove('active'));
     };
 
-    setupSidebar('cart-btn', 'cart-sidebar', 'close-cart');
-    setupSidebar('login-btn', 'profile-sidebar', 'close-profile');
+    // Sidebar
+    const loginBtn = document.getElementById('login-btn');
+    const sidebar = document.getElementById('profile-sidebar');
+    loginBtn.onclick = () => sidebar.classList.add('active');
+    document.getElementById('close-profile').onclick = () => sidebar.classList.remove('active');
 
-    const loggedOutView = document.getElementById('logged-out-view');
-    const loggedInView = document.getElementById('logged-in-view');
-    const userGreeting = document.getElementById('user-greeting');
+    // Products Real-time Loading
+    onSnapshot(collection(db, "products"), snap => {
+      const list = document.getElementById('main-products-list');
+      list.innerHTML = snap.docs.map(doc => {
+        const p = doc.data();
+        return `
+                    <div class="product-card">
+                        <img src="${p.mainImage}" class="product-img">
+                        <div class="product-info">
+                            <h3>${p.name}</h3>
+                            <p style="opacity:0.5; font-size:0.8rem; margin:5px 0;">${p.category}</p>
+                            <div class="p-price">
+                                ${p.priceOld ? `<span class="p-old-price">${p.priceOld} EGP</span>` : ''}
+                                <span>${p.priceNow} EGP</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+      }).join('');
+    });
 
-    // Track Visitors
+    // Visitor Tracking
     async function trackVisitor(user = null) {
-      const statsRef = doc(db, "stats", "counters");
-      const snap = await getDoc(statsRef);
+      const ref = doc(db, "stats", "counters");
+      const snap = await getDoc(ref);
       let data = snap.exists() ? snap.data() : { total_visitors: 0, google_users: 0, fb_users: 0, guests: 0 };
 
-      if (!sessionStorage.getItem('visited')) {
+      if (!sessionStorage.getItem('v')) {
         data.total_visitors = (data.total_visitors || 0) + 1;
-        sessionStorage.setItem('visited', 'true');
+        sessionStorage.setItem('v', '1');
+        if (!user) data.guests = (data.guests || 0) + 1;
+        await setDoc(ref, data, { merge: true });
       }
 
-      if (user) {
-        const provider = user.providerData[0]?.providerId;
-        if (provider === 'google.com' && !localStorage.getItem('tracked_google')) {
-          data.google_users = (data.google_users || 0) + 1;
-          localStorage.setItem('tracked_google', 'true');
-        }
-        if (provider === 'facebook.com' && !localStorage.getItem('tracked_fb')) {
-          data.fb_users = (data.fb_users || 0) + 1;
-          localStorage.setItem('tracked_fb', 'true');
-        }
-      } else if (!localStorage.getItem('tracked_guest')) {
-        data.guests = (data.guests || 0) + 1;
-        localStorage.setItem('tracked_guest', 'true');
+      if (user && !localStorage.getItem('tracked_' + (user.providerData[0]?.providerId || 'u'))) {
+        const pid = user.providerData[0]?.providerId;
+        if (pid === 'google.com') data.google_users = (data.google_users || 0) + 1;
+        if (pid === 'facebook.com') data.fb_users = (data.fb_users || 0) + 1;
+        localStorage.setItem('tracked_' + pid, '1');
+        await setDoc(ref, data, { merge: true });
       }
-
-      await setDoc(statsRef, data, { merge: true });
     }
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
+      const outView = document.getElementById('logged-out-view');
+      const inView = document.getElementById('logged-in-view');
       if (user) {
         trackVisitor(user);
-        loggedOutView.style.display = 'none';
-        loggedInView.style.display = 'block';
-        userGreeting.innerText = `Welcome, ${user.displayName}`;
+        outView.style.display = 'none';
+        inView.style.display = 'block';
+        document.getElementById('user-greeting').innerText = `Hello, ${user.displayName || 'User'}`;
+
+        // Show admin link if user is admin
+        const adminSnap = await getDoc(doc(db, "admins", user.email));
+        if (adminSnap.exists()) document.getElementById('admin-link').style.display = 'block';
 
         if (user.photoURL) {
           const img = document.createElement('img');
-          img.src = user.photoURL;
-          img.className = 'user-avatar';
-          img.id = 'user-icon';
-          const icon = document.getElementById('user-icon');
-          if (icon) icon.replaceWith(img);
+          img.src = user.photoURL; img.className = 'user-avatar';
+          document.getElementById('user-icon').replaceWith(img);
         }
       } else {
         trackVisitor();
-        loggedOutView.style.display = 'block';
-        loggedInView.style.display = 'none';
+        outView.style.display = 'block';
+        inView.style.display = 'none';
       }
     });
 
-    document.getElementById('firebase-login-google').addEventListener('click', async () => {
-      try { await signInWithPopup(auth, googleProvider); } catch (e) { alert(e.message); }
-    });
+    document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+    document.getElementById('fb-login').onclick = () => signInWithPopup(auth, new FacebookAuthProvider());
+    document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => window.location.reload());
 
-    document.getElementById('firebase-login-fb').addEventListener('click', async () => {
-      try { await signInWithPopup(auth, fbProvider); } catch (e) { alert(e.message); }
-    });
-
-    document.getElementById('firebase-logout').addEventListener('click', () => {
-      signOut(auth).then(() => window.location.reload());
-    });
-
-    gsap.from("#hero-title", { y: 100, opacity: 0, duration: 1.5, ease: "expo.out", delay: 0.2 });
-    gsap.from("#hero-desc", { y: 30, opacity: 0, duration: 1.2, ease: "power3.out", delay: 0.8 });
-    gsap.from("#hero-cta", { y: 20, opacity: 0, duration: 1, ease: "power3.out", delay: 1.1 });
+    gsap.from("#hero-title", { y: 100, opacity: 0, duration: 1.5, ease: "expo.out" });
   </script>
 </body>
 
