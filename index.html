@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/javascript.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZERO — Minimalist Clothing</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+  <div id="app">
+    <nav>
+      <div class="logo">Zero</div>
+      <div class="nav-actions">
+        <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+          <i data-lucide="moon" class="moon"></i>
+          <i data-lucide="sun" class="sun"></i>
+        </button>
+        <div class="cart-icon-wrapper">
+          <button id="cart-btn" class="icon-btn" title="Shopping Cart">
+            <i data-lucide="shopping-bag"></i>
+          </button>
+          <span class="cart-count">0</span>
+        </div>
+        <button id="login-btn" class="icon-btn" title="Login with Google">
+          <i data-lucide="user"></i>
+        </button>
+      </div>
+    </nav>
+
+    <main class="hero">
+      <h1>ZERO</h1>
+      <p>Essential pieces, zero distractions. Designed for those who value the purity of form and the luxury of
+        simplicity.</p>
+      <div class="cta-group">
+        <a href="#" class="btn btn-primary">Discover More</a>
+        <a href="#" class="btn btn-secondary">Coming Soon</a>
+      </div>
+    </main>
+
+    <section class="products-placeholder" style="padding: 4rem 5%; text-align: center;">
+      <h2 style="font-size: 1.5rem; opacity: 0.3; letter-spacing: 5px; text-transform: uppercase;">Collection Zero // 00
+      </h2>
+      <div
+        style="margin-top: 4rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div
+          style="height: 400px; background: var(--card-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; opacity: 0.5;">
+          <span>[ Item 01 ]</span>
+        </div>
+        <div
+          style="height: 400px; background: var(--card-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; opacity: 0.5;">
+          <span>[ Item 02 ]</span>
+        </div>
+        <div
+          style="height: 400px; background: var(--card-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; opacity: 0.5;">
+          <span>[ Item 03 ]</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <h2>Your Bag</h2>
+        <i data-lucide="x" class="close-btn" id="close-cart"></i>
+      </div>
+      <div id="cart-items">
+        <p style="text-align: center; margin-top: 50px; opacity: 0.5;">Your bag is currently empty.</p>
+      </div>
+    </div>
+
+    <!-- Profile/Login Sidebar -->
+    <div id="profile-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <h2>Account</h2>
+        <i data-lucide="x" class="close-btn" id="close-profile"></i>
+      </div>
+      <div id="auth-content">
+        <p style="margin-bottom: 2rem; opacity: 0.7;">Sign in to save your preferences and view orders.</p>
+        <button id="google-signin" class="btn btn-primary"
+          style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
+          <i data-lucide="chrome"></i> Continue with Google
+        </button>
+      </div>
+      <div id="user-info" style="display: none;">
+        <p id="user-name"></p>
+        <button id="logout-btn" class="btn" style="margin-top: 2rem; width: 100%;">Sign Out</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>
