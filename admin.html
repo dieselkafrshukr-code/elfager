@@ -136,42 +136,45 @@
                     <input type="text" id="p-name" required>
                 </div>
                 <div class="form-group">
-                    <label>رابط الصورة</label>
-                    <input type="url" id="p-image" required>
+                    <label>صورة المنتج (اختر من جهازك)</label>
+                    <input type="file" id="p-image-file" accept="image/*" required>
+                    <div id="upload-progress" style="display:none; margin-top:5px; font-size:0.8rem; color: #44ff44;">
+                        جاري رفع الصورة... <span id="progress-pct">0%</span></div>
                 </div>
-                <div class="form-group">
-                    <label>المقاسات (S, M, L...)</label>
-                    <input type="text" id="p-sizes" placeholder="S, M, L, XL">
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div class="form-group">
-                        <label>السعر الحالي</label>
-                        <input type="number" id="p-price-now" required>
-                    </div>
-                    <div class="form-group">
-                        <label>قبل الخصم</label>
-                        <input type="number" id="p-price-before">
-                    </div>
-                </div>
-                <button type="submit" class="btn">إضافة المنتج</button>
-            </form>
-
-            <div class="product-list">
-                <h3>المنتجات الحالية</h3>
-                <div id="products-container"></div>
+        </div>
+        <div class="form-group">
+            <label>المقاسات (S, M, L...)</label>
+            <input type="text" id="p-sizes" placeholder="S, M, L, XL">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="form-group">
+                <label>السعر الحالي</label>
+                <input type="number" id="p-price-now" required>
+            </div>
+            <div class="form-group">
+                <label>قبل الخصم</label>
+                <input type="number" id="p-price-before">
             </div>
         </div>
+        <button type="submit" class="btn">إضافة المنتج</button>
+        </form>
 
-        <!-- Orders Tab -->
-        <div id="orders-tab" class="tab-content" style="display:none;">
-            <h3>سجل الطلبات</h3>
-            <div id="orders-container">
-                <p style="opacity:0.5; text-align:center;">جاري تحميل الطلبات...</p>
-            </div>
+        <div class="product-list">
+            <h3>المنتجات الحالية</h3>
+            <div id="products-container"></div>
         </div>
+    </div>
 
-        <a href="./index.html"
-            style="display:block; text-align:center; margin-top:2rem; color:var(--text); opacity:0.5;">العودة للموقع</a>
+    <!-- Orders Tab -->
+    <div id="orders-tab" class="tab-content" style="display:none;">
+        <h3>سجل الطلبات</h3>
+        <div id="orders-container">
+            <p style="opacity:0.5; text-align:center;">جاري تحميل الطلبات...</p>
+        </div>
+    </div>
+
+    <a href="./index.html"
+        style="display:block; text-align:center; margin-top:2rem; color:var(--text); opacity:0.5;">العودة للموقع</a>
     </div>
 
     <style>
