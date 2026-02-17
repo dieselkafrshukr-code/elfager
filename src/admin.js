@@ -18,23 +18,10 @@ onAuthStateChanged(auth, (user) => {
         loginView.style.display = 'none';
         adminContent.style.display = 'block';
         loadProducts();
-        loadOrders();
     } else {
         loginView.style.display = 'block';
         adminContent.style.display = 'none';
     }
-});
-
-// --- Tab Switching Logic ---
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.onclick = () => {
-        const target = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-        btn.classList.add('active');
-        document.getElementById(target).classList.add('active');
-    };
 });
 
 // --- Image Optimization (Resize to avoid 1MB limit) ---
@@ -156,32 +143,6 @@ function loadProducts() {
 
         document.querySelectorAll('.del-btn').forEach(b => {
             b.onclick = async () => { if (confirm("حذف المنتج؟")) await deleteDoc(doc(db, "products", b.dataset.id)); };
-        });
-    });
-}
-
-function loadOrders() {
-    const container = document.getElementById('orders-container');
-    onSnapshot(collection(db, "orders"), (snap) => {
-        container.innerHTML = "<h3>سجل الطلبات</h3>";
-        if (snap.empty) { container.innerHTML += "<p style='opacity:0.5'>لا توجد طلبات.</p>"; return; }
-        snap.forEach(d => {
-            const o = d.data();
-            const card = document.createElement('div');
-            card.className = "order-card";
-            card.innerHTML = `
-                <div class="order-header"><strong>${o.customerName}</strong><span>${o.customerPhone}</span></div>
-                <div style="font-size:0.9rem; margin-top:5px;">
-                    <p>📍 العنوان: ${o.customerAddress}</p>
-                    <p>📦 المنتجات: ${o.items.map(i => `${i.name}(${i.qty})`).join(', ')}</p>
-                    <p style="text-align:left; font-weight:800; border-top:1px solid #333; padding-top:5px; margin-top:5px;">الإجمالي: ${o.total} EGP</p>
-                </div>
-                <button class="del-order-btn" data-id="${d.id}" style="background:#ff3e3e; color:white; border:none; padding:8px; width:100%; border-radius:5px; margin-top:10px; cursor:pointer;">مسح الطلب</button>
-            `;
-            container.appendChild(card);
-        });
-        document.querySelectorAll('.del-order-btn').forEach(b => {
-            b.onclick = async () => { if (confirm("مسح الطلب؟")) await deleteDoc(doc(db, "orders", b.dataset.id)); };
         });
     });
 }

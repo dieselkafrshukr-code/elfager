@@ -147,21 +147,6 @@ if (checkoutBtn) {
 
     const total = bag.reduce((s, i) => s + (i.price * i.qty), 0);
 
-    // Save to Firebase first
-    try {
-      await addDoc(collection(db, "orders"), {
-        customerName: name,
-        customerPhone: phone,
-        customerAddress: addr,
-        items: bag,
-        total: total,
-        status: 'جديد',
-        createdAt: new Date()
-      });
-    } catch (e) {
-      console.error("Error saving order:", e);
-    }
-
     let message = `*طلب جديد من Trico style*\n\n*الاسم:* ${name}\n*الهاتف:* ${phone}\n*العنوان:* ${addr}\n\n*المنتجات:*\n`;
     bag.forEach((item, index) => { message += `${index + 1}. ${item.name} - ${item.price} EGP × ${item.qty}\n`; });
     message += `\n*الإجمالي:* ${total.toLocaleString()} EGP`;
@@ -173,7 +158,7 @@ if (checkoutBtn) {
       localStorage.setItem('bag', "[]");
       renderBag();
       closeSidebar('cart-sidebar');
-      alert('تم إرسال الطلب وحفظه في لوحة التحكم! أرسل رسالة الواتساب الآن.');
+      alert('تم إرسال الطلب! أرسل رسالة الواتساب الآن لإتمام العملية.');
     }, 500);
   };
 }
