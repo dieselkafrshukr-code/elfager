@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZERO Admin — Full Statistics & Management</title>
+    <title>ZERO Admin — Master Dashboard</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -19,14 +19,39 @@
             --danger: #ff3e3e;
         }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
             display: flex;
             height: 100vh;
             overflow: hidden;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-box {
+            background: var(--sidebar-bg);
+            padding: 3.5rem;
+            border-radius: 30px;
+            width: 400px;
+            text-align: center;
+            border: 1px solid var(--border-color);
         }
 
         /* Sidebar */
@@ -65,10 +90,6 @@
             color: var(--text-color);
         }
 
-        .nav-item i {
-            width: 20px;
-        }
-
         /* Main Content */
         .main-content {
             flex: 1;
@@ -83,7 +104,6 @@
             margin-bottom: 2.5rem;
         }
 
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -96,58 +116,29 @@
             padding: 1.8rem;
             border-radius: 20px;
             border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
         }
 
         .stat-card h3 {
             font-size: 0.8rem;
             opacity: 0.5;
             text-transform: uppercase;
-            letter-spacing: 2px;
             margin-bottom: 1rem;
         }
 
         .stat-card .value {
             font-size: 2.2rem;
             font-weight: 800;
-            margin-bottom: 5px;
         }
 
-        .stat-card .trend {
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .trend.up {
-            color: var(--accent-color);
-        }
-
-        /* Sections Container */
+        /* Sections */
         .section-view {
             display: none;
         }
 
         .section-view.active {
             display: block;
-            animation: fadeIn 0.5s ease;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Forms & Inputs */
         input,
         select,
         textarea {
@@ -173,11 +164,6 @@
             width: 100%;
         }
 
-        .btn:hover {
-            opacity: 0.8;
-            transform: translateY(-2px);
-        }
-
         .btn-secondary {
             background: #222;
             color: #fff;
@@ -189,36 +175,6 @@
             color: #fff;
         }
 
-        /* Product Variant Card */
-        .variant-box {
-            background: #111;
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1.5rem;
-            border: 1px dashed #333;
-        }
-
-        /* Login Overlay */
-        #login-overlay {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-box {
-            background: var(--sidebar-bg);
-            padding: 3.5rem;
-            border-radius: 30px;
-            width: 400px;
-            text-align: center;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Tables/Lists */
         .data-card {
             background: var(--card-bg);
             padding: 1.5rem;
@@ -230,7 +186,6 @@
             align-items: center;
         }
 
-        /* Loading Spinner */
         .loader {
             border: 3px solid #f3f3f3;
             border-top: 3px solid #000;
@@ -266,7 +221,7 @@
         </div>
     </div>
 
-    <aside class="sidebar">
+    <aside class="sidebar" id="main-sidebar" style="display: none;">
         <div class="sidebar-logo">ZERO<span>.</span></div>
         <nav>
             <div class="nav-item active" data-target="overview-section"><i data-lucide="layout-dashboard"></i> Overview
@@ -282,141 +237,86 @@
         </div>
     </aside>
 
-    <main class="main-content">
+    <main class="main-content" id="main-body" style="display: none;">
         <div class="header">
             <h2 id="section-title">Overview</h2>
-            <div id="admin-info" style="font-size: 0.9rem; opacity: 0.5;"></div>
+            <div id="admin-info" style="opacity: 0.5;"></div>
         </div>
 
-        <!-- 1. OVERVIEW SECTION -->
+        <!-- OVERVIEW -->
         <div id="overview-section" class="section-view active">
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Visitors</h3>
-                    <div class="value" id="stat-total-vis">0</div>
-                    <div class="trend up" id="vis-today-trend">+0 Today</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Real Customers</h3>
-                    <div class="value" id="stat-real-users">0</div>
-                    <div class="trend" style="opacity:0.5">Google/FB Logins</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Guest Browsers</h3>
-                    <div class="value" id="stat-guest-users">0</div>
-                    <div class="trend" style="opacity:0.5">Anonymous</div>
+                    <div class="value" id="stat-vis">0</div>
                 </div>
                 <div class="stat-card">
                     <h3>Total Products</h3>
-                    <div class="value" id="stat-prod-count">0</div>
+                    <div class="value" id="stat-prod">0</div>
                 </div>
-            </div>
-            <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Orders</h3>
-                    <div class="value" id="stat-orders-count">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Revenue (EGP)</h3>
-                    <div class="value" id="stat-revenue">0</div>
+                    <div class="value" id="stat-ord">0</div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. PRODUCTS SECTION -->
+        <!-- PRODUCTS -->
         <div id="products-section" class="section-view">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
-                <h3>Product Inventory</h3>
-                <button id="show-add-product" class="btn" style="width: auto;">+ ADD NEW PRODUCT</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2rem;">
+                <h3>Inventory</h3>
+                <button id="add-p-toggle" class="btn" style="width:auto;">+ ADD PRODUCT</button>
             </div>
-
-            <div id="add-product-form"
-                style="display: none; background: var(--sidebar-bg); padding: 2.5rem; border-radius: 20px; margin-bottom: 3rem; border: 1px solid var(--border-color);">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <input id="p-name" placeholder="Product Name (e.g. Minimalist Hoodie)">
-                    <select id="p-cat">
-                        <option value="Essential">Essential Collection</option>
-                        <option value="Winter">Winter 2026</option>
-                        <option value="Limited">Limited Edition</option>
-                    </select>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <input id="p-price-old" type="number" placeholder="Old Price (Strikethrough)">
-                    <input id="p-price-now" type="number" placeholder="Sale Price (Actual)">
-                </div>
-
-                <p style="margin-top: 1.5rem; font-weight: 600;">Main Store Front Image</p>
-                <input type="file" id="p-main-img" accept="image/*">
-
-                <div id="variants-container">
-                    <p style="margin-top: 1.5rem; font-weight: 600;">Color Variants & Images</p>
-                    <div class="variant-box">
-                        <input class="v-color" placeholder="Color Name (e.g. Jet Black)">
-                        <input class="v-sizes" placeholder="Sizes Available (e.g. S, M, L, XL)">
-                        <p style="font-size: 0.8rem; opacity: 0.5; margin-top: 5px;">Images for this color:</p>
-                        <input type="file" class="v-imgs" multiple accept="image/*">
-                    </div>
-                </div>
-                <button id="add-variant-btn" class="btn btn-secondary" style="margin-bottom: 2rem;">+ ADDD ANOTHER
-                    COLOR</button>
-
-                <button id="publish-product" class="btn">PUBLISH PRODUCT TO STORE</button>
+            <div id="p-form"
+                style="display:none; background:#111; padding:2rem; border-radius:20px; border:1px solid #222; margin-bottom:2rem;">
+                <input id="p-name" placeholder="Name">
+                <input id="p-price" type="number" placeholder="Price">
+                <input type="file" id="p-img">
+                <button id="p-publish" class="btn">PUBLISH</button>
             </div>
-
-            <div id="products-list-grid"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
-                <!-- Products will appear here -->
-            </div>
+            <div id="p-grid"
+                style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:1.5rem;"></div>
         </div>
 
-        <!-- 3. ORDERS SECTION -->
+        <!-- ORDERS -->
         <div id="orders-section" class="section-view">
-            <div id="orders-list">
-                <!-- Orders List -->
-            </div>
+            <div id="o-list"></div>
         </div>
 
-        <!-- 4. SHIPPING SECTION -->
+        <!-- SHIPPING -->
         <div id="shipping-section" class="section-view">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
-                <h3>Shipping Price Control</h3>
-                <button id="save-shipping" class="btn" style="width: auto;">SAVE ALL RATES</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2rem;">
+                <h3>Shipping Rates</h3>
+                <button id="save-ship" class="btn" style="width:auto;">SAVE ALL</button>
             </div>
-            <div id="shipping-grid"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                <!-- Shipping Inputs -->
-            </div>
+            <div id="ship-grid"
+                style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1rem;"></div>
         </div>
 
-        <!-- 5. MANAGEMENT SECTION -->
+        <!-- MANAGEMENT -->
         <div id="management-section" class="section-view">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
-                <h3>Staff & Permissions</h3>
-                <button id="show-add-staff" class="btn" style="width: auto;">+ CREATE STAFF ACCOUNT</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:2rem;">
+                <h3>Staff List</h3>
+                <button id="add-staff-toggle" class="btn" style="width:auto;">+ ADD STAFF</button>
             </div>
-
             <div id="staff-form"
-                style="display: none; background: var(--sidebar-bg); padding: 2rem; border-radius: 20px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
-                <input id="s-email" placeholder="Staff Email Address">
-                <input id="s-pass" type="password" placeholder="Temporary Password">
+                style="display:none; background:#111; padding:2rem; border-radius:20px; border:1px solid #222; margin-bottom:2rem;">
+                <input id="s-email" placeholder="Staff Email">
                 <select id="s-role">
-                    <option value="admin">Full Admin (Global Control)</option>
-                    <option value="staff">Staff (Orders & Products Only)</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
                 </select>
-                <button id="save-staff-btn" class="btn">CREATE STAFF ACCOUNT</button>
+                <button id="s-save" class="btn">SAVE STAFF</button>
             </div>
-
-            <div id="staff-list">
-                <!-- Staff members -->
-            </div>
+            <div id="staff-list"></div>
         </div>
 
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, getDocs, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
@@ -432,304 +332,122 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const loginOverlay = document.getElementById('login-overlay');
-        const sections = document.querySelectorAll('.section-view');
-        const navItems = document.querySelectorAll('.nav-item');
+        setPersistence(auth, inMemoryPersistence);
 
-        // 1. --- LOGIN & AUTH ---
+        const loginOverlay = document.getElementById('login-overlay');
+        const sidebar = document.getElementById('main-sidebar');
+        const mainBody = document.getElementById('main-body');
+
         document.getElementById('login-btn').onclick = async () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (e) { alert("Access Denied: " + e.message); }
+            try { await signInWithEmailAndPassword(auth, email, pass); } catch (e) { alert(e.message); }
         };
-
-        document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => window.location.reload());
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const adminRef = doc(db, "admins", user.email);
-                const adminSnap = await getDoc(adminRef);
-                if (adminSnap.exists()) {
-                    loginOverlay.style.display = 'none';
-                    document.getElementById('admin-info').innerText = `Logged as ${adminSnap.data().role}: ${user.email}`;
+                const snap = await getDoc(doc(db, "admins", user.email));
+                if (snap.exists()) {
+                    loginOverlay.style.display = 'none'; sidebar.style.display = 'flex'; mainBody.style.display = 'block';
                     initDashboard();
-                } else {
-                    alert("Unauthorized Email.");
-                    signOut(auth);
-                }
-            } else {
-                loginOverlay.style.display = 'flex';
-            }
+                } else { alert("Unauthorized"); signOut(auth); }
+            } else { loginOverlay.style.display = 'flex'; sidebar.style.display = 'none'; mainBody.style.display = 'none'; }
         });
 
-        // 2. --- DASHBOARD INITIALIZATION ---
         function initDashboard() {
-            // Real-time Listeners for Stats
-            onSnapshot(doc(db, "stats", "counters"), s => {
-                if (!s.exists()) return;
-                const d = s.data();
-                document.getElementById('stat-total-vis').innerText = d.total_visitors || 0;
-                document.getElementById('stat-real-users').innerText = (d.google_users || 0) + (d.fb_users || 0);
-                document.getElementById('stat-guest-users').innerText = d.guests || 0;
-            });
-
-            onSnapshot(collection(db, "products"), s => document.getElementById('stat-prod-count').innerText = s.size);
-            onSnapshot(collection(db, "orders"), s => {
-                document.getElementById('stat-orders-count').innerText = s.size;
-                let rev = 0;
-                s.forEach(o => rev += Number(o.data().total_price || 0));
-                document.getElementById('stat-revenue').innerText = rev.toLocaleString();
-            });
-
-            loadProducts();
-            loadOrders();
+            onSnapshot(doc(db, "stats", "counters"), s => { if (s.exists()) document.getElementById('stat-vis').innerText = s.data().total_visitors || 0; });
+            onSnapshot(collection(db, "products"), s => { document.getElementById('stat-prod').innerText = s.size; renderProducts(s.docs); });
+            onSnapshot(collection(db, "orders"), s => { document.getElementById('stat-ord').innerText = s.size; renderOrders(s.docs); });
+            onSnapshot(collection(db, "admins"), s => renderStaff(s.docs));
             loadShipping();
-            loadStaff();
         }
 
-        // Navigation Switcher
-        navItems.forEach(item => {
-            item.onclick = () => {
-                navItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                sections.forEach(s => s.classList.remove('active'));
-                const target = item.dataset.target;
-                document.getElementById(target).classList.add('active');
-                document.getElementById('section-title').innerText = item.innerText;
-            }
-        });
-
-        // 3. --- PRODUCT MANAGEMENT (The Advanced System) ---
-        document.getElementById('show-add-product').onclick = () => {
-            const form = document.getElementById('add-product-form');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        };
-
-        document.getElementById('add-variant-btn').onclick = () => {
-            const div = document.createElement('div');
-            div.className = "variant-box";
-            div.innerHTML = `
-            <input class="v-color" placeholder="Color Name">
-            <input class="v-sizes" placeholder="Sizes (e.g. S, M, L)">
-            <input type="file" class="v-imgs" multiple accept="image/*">
-        `;
-            document.getElementById('variants-container').appendChild(div);
-        };
-
-        // Helper: Compress & Convert Image to Base64
         async function toBase64(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (e) => resolve(e.target.result);
-            });
+            return new Promise((r) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (e) => r(e.target.result); });
         }
 
-        document.getElementById('publish-product').onclick = async (e) => {
-            const btn = e.target;
-            btn.disabled = true; btn.innerHTML = '<div class="loader"></div> Processing...';
-
+        // Products
+        document.getElementById('p-publish').onclick = async (e) => {
+            const btn = e.target; btn.disabled = true; btn.innerHTML = "Publishing...";
             try {
-                const name = document.getElementById('p-name').value;
-                const priceOld = document.getElementById('p-price-old').value;
-                const priceNow = document.getElementById('p-price-now').value;
-                const category = document.getElementById('p-cat').value;
-                const mainImgFile = document.getElementById('p-main-img').files[0];
-
-                if (!name || !priceNow || !mainImgFile) throw new Error("Please at least provide name, price, and main image.");
-
-                const mainImageUrl = await toBase64(mainImgFile);
-
-                const variantElements = document.querySelectorAll('.variant-box');
-                const variants = [];
-
-                for (let box of variantElements) {
-                    const color = box.querySelector('.v-color').value;
-                    const sizes = box.querySelector('.v-sizes').value;
-                    const imgFiles = box.querySelector('.v-imgs').files;
-
-                    const variantImages = [];
-                    for (let file of imgFiles) {
-                        variantImages.push(await toBase64(file));
-                    }
-
-                    variants.push({ color, sizes, images: variantImages });
-                }
-
-                await addDoc(collection(db, "products"), {
-                    name, price_old: priceOld, price_now: priceNow, category,
-                    main_image: mainImageUrl, variants, createdAt: new Date()
-                });
-
-                alert("Product successfully published!");
-                window.location.reload();
-            } catch (err) { alert(err.message); }
-            finally { btn.disabled = false; btn.innerText = "PUBLISH PRODUCT TO STORE"; }
+                const file = document.getElementById('p-img').files[0];
+                const base64 = await toBase64(file);
+                await addDoc(collection(db, "products"), { name: document.getElementById('p-name').value, price_now: document.getElementById('p-price').value, main_image: base64, visible: true, createdAt: new Date() });
+                alert("Live!"); document.getElementById('p-form').style.display = 'none';
+            } catch (err) { alert(err.message); } finally { btn.disabled = false; btn.innerText = "PUBLISH"; }
         };
 
-        function loadProducts() {
-            onSnapshot(query(collection(db, "products"), orderBy("createdAt", "desc")), s => {
-                const grid = document.getElementById('products-list-grid');
-                grid.innerHTML = "";
-                s.forEach(docSnap => {
-                    const p = docSnap.data();
-                    const isHidden = p.visible === false;
-                    const div = document.createElement('div');
-                    div.className = "data-card";
-                    div.style.flexDirection = "column";
-                    div.innerHTML = `
+        function renderProducts(docs) {
+            document.getElementById('p-grid').innerHTML = docs.map(d => {
+                const p = d.data(); const visible = p.visible !== false;
+                return `
+                <div class="data-card" style="flex-direction:column">
                     <div style="position:relative; width:100%">
-                        <img src="${p.main_image}" style="width:100%; height:200px; object-fit:cover; border-radius:10px; background:#000; opacity: ${isHidden ? '0.3' : '1'}">
-                        <button onclick="window.toggleVisibility('${docSnap.id}', ${!isHidden})" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.7); border:none; color:white; padding:8px; border-radius:50%; cursor:pointer;">
-                            <i data-lucide="${isHidden ? 'eye-off' : 'eye'}"></i>
-                        </button>
+                        <img src="${p.main_image}" style="width:100%; height:150px; object-fit:cover; border-radius:12px; opacity:${visible ? 1 : 0.3}">
+                        <button onclick="window.toggleVis('${d.id}', ${visible})" style="position:absolute; top:5px; right:5px; background:#000; color:#fff; border:none; border-radius:50%; padding:5px; cursor:pointer;"><i data-lucide="${visible ? 'eye' : 'eye-off'}"></i></button>
                     </div>
-                    <div style="width:100%; margin-top:15px; text-align:center;">
-                        <h4 style="margin:0">${p.name} ${isHidden ? '<small>(Hidden)</small>' : ''}</h4>
-                        <p style="opacity:0.5; font-size:0.8rem;">${p.category}</p>
-                        <p><strong>${p.price_now} EGP</strong> ${p.price_old ? `<span style="text-decoration:line-through; font-size:0.8rem; opacity:0.3;">${p.price_old}</span>` : ''}</p>
-                        <div style="display:flex; gap:10px; margin-top:10px;">
-                            <button class="btn btn-secondary" style="padding:10px" onclick="window.editProduct('${docSnap.id}')">Edit</button>
-                            <button class="btn btn-danger" style="padding:10px" onclick="window.delProduct('${docSnap.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
-                    grid.appendChild(div);
-                });
-                lucide.createIcons();
-            });
+                    <div style="margin-top:10px; text-align:center"><h4>${p.name}</h4><p>${p.price_now} EGP</p><button class="btn-danger" style="margin-top:5px; padding:5px; border-radius:8px; width:100%" onclick="window.delP('${d.id}')">Delete</button></div>
+                </div>
+            `;
+            }).join('');
+            lucide.createIcons();
         }
 
-        // --- Actions ---
-        window.toggleVisibility = async (id, status) => {
-            await setDoc(doc(db, "products", id), { visible: status }, { merge: true });
-        };
-
-        window.editProduct = async (id) => {
-            const snap = await getDoc(doc(db, "products", id));
-            if (!snap.exists()) return;
-            const p = snap.data();
-
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-price-old').value = p.price_old || "";
-            document.getElementById('p-price-now').value = p.price_now;
-            document.getElementById('p-cat').value = p.category;
-
-            document.getElementById('add-product-form').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            const pubBtn = document.getElementById('publish-product');
-            pubBtn.innerText = "UPDATE PRODUCT";
-            pubBtn.onclick = async (e) => {
-                const btn = e.target;
-                btn.disabled = true; btn.innerHTML = '<div class="loader"></div> Updating...';
-                try {
-                    const upData = {
-                        name: document.getElementById('p-name').value,
-                        price_old: document.getElementById('p-price-old').value,
-                        price_now: document.getElementById('p-price-now').value,
-                        category: document.getElementById('p-cat').value,
-                    };
-                    const newMainFile = document.getElementById('p-main-img').files[0];
-                    if (newMainFile) upData.main_image = await toBase64(newMainFile);
-
-                    await setDoc(doc(db, "products", id), upData, { merge: true });
-                    alert("Product Updated!");
-                    window.location.reload();
-                } catch (err) { alert(err.message); }
-            };
-        };
-
-        // 4. --- ORDERS MANAGEMENT ---
-        function loadOrders() {
-            onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), s => {
-                const list = document.getElementById('orders-list');
-                list.innerHTML = "";
-                s.forEach(oDoc => {
-                    const o = oDoc.data();
-                    const div = document.createElement('div');
-                    div.className = "order-card";
-                    div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong>Customer: ${o.customer_name}</strong>
-                        <span class="tag" style="background:${o.status === 'Completed' ? 'var(--accent-color)' : '#ffd900'}; color:#000;">${o.status || 'Pending'}</span>
-                    </div>
-                    <p style="margin:10px 0;">Item: ${o.product_name} | Price: ${o.total_price} EGP</p>
-                    <p style="font-size:0.8rem; opacity:0.5;">Phone: ${o.phone} | Address: ${o.address}</p>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button class="btn btn-secondary" style="padding:5px 15px; width:auto;" onclick="window.updateOrderStatus('${oDoc.id}', 'Completed')">Mark Delivered</button>
-                        <button class="btn btn-danger" style="padding:5px 15px; width:auto;" onclick="window.delOrder('${oDoc.id}')">Delete</button>
-                    </div>
-                `;
-                    list.appendChild(div);
-                });
-            });
+        // Orders
+        function renderOrders(docs) {
+            document.getElementById('o-list').innerHTML = docs.map(d => {
+                const o = d.data();
+                return `<div class="data-card"><div><strong>${o.customer_name}</strong> - ${o.total_price} EGP<br><small>${o.phone} | ${o.address}</small></div><button class="btn-danger" style="padding:5px 10px; width:auto" onclick="window.delO('${d.id}')">Del</button></div>`;
+            }).join('');
         }
 
-        // 5. --- SHIPPING & MANAGEMENT ---
+        // Staff
+        document.getElementById('add-staff-toggle').onclick = () => { const f = document.getElementById('staff-form'); f.style.display = f.style.display === 'none' ? 'block' : 'none'; };
+        document.getElementById('s-save').onclick = async () => {
+            const email = document.getElementById('s-email').value;
+            const role = document.getElementById('s-role').value;
+            await setDoc(doc(db, "admins", email), { email, role, createdAt: new Date() });
+            alert("Done"); document.getElementById('staff-form').style.display = 'none';
+        };
+
+        function renderStaff(docs) {
+            document.getElementById('staff-list').innerHTML = docs.map(d => {
+                const s = d.data();
+                return `<div class="data-card"><div><strong>${s.email}</strong> - ${s.role}</div><button class="btn-danger" style="padding:5px 10px; width:auto" onclick="window.delStaff('${d.id}')">Del</button></div>`;
+            }).join('');
+        }
+
+        // Shipping
         async function loadShipping() {
-            const provinces = ["Cairo", "Giza", "Alexandria", "Qalyubia", "Dakahlia", "Sharqia", "Gharbia", "Monufia", "Beheira", "Kafr El Sheikh", "Damietta", "Port Said", "Ismailia", "Suez", "North Sinai", "South Sinai", "Beni Suef", "Fayoum", "Minya", "Assiut", "Sohag", "Qena", "Luxor", "Aswan", "Red Sea", "New Valley", "Matrouh"];
-            const grid = document.getElementById('shipping-grid');
+            const provinces = ["Cairo", "Giza", "Alexandria", "Dakahlia", "Sharqia", "Gharbia", "Monufia", "Beheira", "Kafr El Sheikh", "Damietta", "Port Said", "Ismailia", "Suez", "North Sinai", "South Sinai", "Beni Suef", "Fayoum", "Minya", "Assiut", "Sohag", "Qena", "Luxor", "Aswan", "Red Sea", "New Valley", "Matrouh"];
+            const grid = document.getElementById('ship-grid');
             const snap = await getDoc(doc(db, "settings", "shipping"));
             const rates = snap.exists() ? snap.data().rates : {};
-
-            provinces.forEach(p => {
-                const div = document.createElement('div');
-                div.innerHTML = `<label style="font-size:0.8rem; opacity:0.5">${p}</label><input class="ship-in" data-p="${p}" type="number" value="${rates[p] || 0}" style="margin:5px 0 15px">`;
-                grid.appendChild(div);
-            });
-
-            document.getElementById('save-shipping').onclick = async () => {
-                const newRates = {};
-                document.querySelectorAll('.ship-in').forEach(i => newRates[i.dataset.p] = i.value);
-                await setDoc(doc(db, "settings", "shipping"), { rates: newRates });
-                alert("Shipping Rates Saved!");
-            };
+            grid.innerHTML = provinces.map(p => `<div><label style="font-size:0.7rem; opacity:0.5">${p}</label><input class="ship-in" data-p="${p}" type="number" value="${rates[p] || 0}"></div>`).join('');
         }
 
-        document.getElementById('show-add-staff').onclick = () => {
-            const form = document.getElementById('staff-form');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('save-ship').onclick = async () => {
+            const rates = {}; document.querySelectorAll('.ship-in').forEach(i => rates[i.dataset.p] = i.value);
+            await setDoc(doc(db, "settings", "shipping"), { rates }); alert("Saved");
         };
 
-        document.getElementById('save-staff-btn').onclick = async () => {
-            const email = document.getElementById('s-email').value;
-            const pass = document.getElementById('s-pass').value;
-            const role = document.getElementById('s-role').value;
-            if (!email || !pass) return;
+        window.toggleVis = async (id, s) => { await setDoc(doc(db, "products", id), { visible: !s }, { merge: true }); };
+        window.delP = async (id) => { if (confirm("Del?")) await deleteDoc(doc(db, "products", id)); };
+        window.delO = async (id) => { if (confirm("Del?")) await deleteDoc(doc(db, "orders", id)); };
+        window.delStaff = async (id) => { if (confirm("Del?")) await deleteDoc(doc(db, "admins", id)); };
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-            // Note: For real environment, this should trigger a Cloud Function or manually add to Auth
-            // Here we prepare the DB entry.
-            await setDoc(doc(db, "admins", email), { email, role, createdAt: new Date() });
-            alert("Staff record created! (Ensure you also add this email in Firebase Auth Console)");
-            window.location.reload();
-        };
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.onclick = () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
+                document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+                document.getElementById(item.dataset.target).classList.add('active');
+                document.getElementById('section-title').innerText = item.innerText;
+                lucide.createIcons();
+            }
+        });
 
-        function loadStaff() {
-            onSnapshot(collection(db, "admins"), s => {
-                const list = document.getElementById('staff-list');
-                list.innerHTML = "";
-                s.forEach(staffDoc => {
-                    const s = staffDoc.data();
-                    const div = document.createElement('div');
-                    div.className = "data-card";
-                    div.innerHTML = `
-                    <div><strong>${s.email}</strong><br><span style="opacity:0.4">${s.role}</span></div>
-                    <button class="btn btn-danger" style="width:auto; padding:8px 20px" onclick="window.delStaff('${staffDoc.id}')">Remove</button>
-                `;
-                    list.appendChild(div);
-                });
-            });
-        }
-
-        // Global Window Functions for Buttons
-        window.delProduct = async (id) => { if (confirm("Are you sure?")) await deleteDoc(doc(db, "products", id)); };
-        window.delOrder = async (id) => { if (confirm("Are you sure?")) await deleteDoc(doc(db, "orders", id)); };
-        window.delStaff = async (id) => { if (confirm("Are you sure?")) await deleteDoc(doc(db, "admins", id)); };
-        window.updateOrderStatus = async (id, status) => { await setDoc(doc(db, "orders", id), { status }, { merge: true }); };
-
+        document.getElementById('add-p-toggle').onclick = () => { const f = document.getElementById('p-form'); f.style.display = f.style.display === 'none' ? 'block' : 'none'; };
         lucide.createIcons();
     </script>
 </body>

@@ -110,6 +110,7 @@
       transition: var(--transition);
       border: 1px solid var(--accent-color);
       cursor: pointer;
+      text-align: center;
     }
 
     .btn-primary {
@@ -117,7 +118,6 @@
       color: var(--bg-color);
     }
 
-    /* Store Section */
     .products-section {
       padding: 8rem 5%;
       border-top: 1px solid var(--border-color);
@@ -125,7 +125,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 2.5rem;
     }
 
@@ -157,14 +157,6 @@
       font-weight: 800;
     }
 
-    .p-old-price {
-      text-decoration: line-through;
-      opacity: 0.4;
-      font-size: 0.8rem;
-      margin-right: 8px;
-    }
-
-    /* Sidebar Styles */
     .sidebar {
       position: fixed;
       right: -100%;
@@ -189,18 +181,6 @@
       object-fit: cover;
     }
 
-    [data-theme='dark'] .sun {
-      display: block;
-    }
-
-    [data-theme='dark'] .moon {
-      display: none;
-    }
-
-    .sun {
-      display: none;
-    }
-
     @media (max-width: 600px) {
       .sidebar {
         width: 100%;
@@ -214,8 +194,8 @@
     <div class="logo">Zero</div>
     <div style="display: flex; gap: 1rem; align-items: center;">
       <button id="theme-toggle" class="icon-btn">
-        <i data-lucide="moon" class="moon"></i>
-        <i data-lucide="sun" class="sun"></i>
+        <i data-lucide="moon" id="moon-icon"></i>
+        <i data-lucide="sun" id="sun-icon" style="display:none"></i>
       </button>
       <button id="btn-cart" class="icon-btn"><i data-lucide="shopping-bag"></i></button>
       <button id="login-btn" class="icon-btn"><i data-lucide="user" id="user-icon"></i></button>
@@ -224,40 +204,52 @@
 
   <main class="hero">
     <h1 id="hero-title">ZERO</h1>
-    <p>Essential pieces, zero distractions. Designed for those who value purity and simple luxury.</p>
-    <a href="#store" class="btn btn-primary">Shop Now</a>
+    <p>Essential pieces, zero distractions. Designed for those who value luxury in simplicity.</p>
+    <a href="#store" class="btn btn-primary">Shop Collection</a>
   </main>
 
   <section class="products-section" id="store">
-    <span
-      style="display:block; text-align:center; letter-spacing:5px; text-transform:uppercase; opacity:0.4; margin-bottom:4rem;">Core
-      Collection</span>
-    <div class="grid" id="main-products-list">
-      <!-- Dynamic Products Loading -->
+    <div class="grid" id="products-list">
+      <!-- Loading indicator -->
+      <p style="grid-column: 1/-1; text-align:center; opacity:0.5">Fetching collection...</p>
     </div>
   </section>
 
+  <!-- Sidebars -->
+  <div id="cart-sidebar" class="sidebar">
+    <div style="display:flex; justify-content:space-between; margin-bottom:2rem;">
+      <h2>Bag</h2><i data-lucide="x" style="cursor:pointer" id="close-cart"></i>
+    </div>
+    <div id="cart-items"></div>
+    <div id="checkout-box" style="margin-top:2rem; display:none;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-weight:800;">
+        <span>Total</span><span id="bag-total">0 EGP</span>
+      </div>
+      <input id="c-name" placeholder="Name"
+        style="width:100%; padding:10px; margin-bottom:10px; background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-color);">
+      <input id="c-phone" placeholder="Phone"
+        style="width:100%; padding:10px; margin-bottom:10px; background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-color);">
+      <textarea id="c-addr" placeholder="Address"
+        style="width:100%; padding:10px; margin-bottom:10px; background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-color);"></textarea>
+      <button id="checkout-btn" class="btn btn-primary" style="width:100%">Order Now</button>
+    </div>
+  </div>
+
   <div id="profile-sidebar" class="sidebar">
-    <div style="display:flex; justify-content:space-between; margin-bottom:4rem;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:2rem;">
       <h2>Account</h2><i data-lucide="x" style="cursor:pointer" id="close-profile"></i>
     </div>
-    <div id="logged-out-view">
-      <button id="fb-login" class="btn"
-        style="width:100%; border-color:#1877f2; color:#1877f2; margin-bottom:10px;">Facebook Login</button>
-      <button id="google-login" class="btn" style="width:100%;">Google Login</button>
-    </div>
-    <div id="logged-in-view" style="display:none; text-align:center;">
-      <p id="user-greeting" style="margin-bottom:2rem; font-size:1.2rem;"></p>
-      <a href="/admin.html" id="admin-link"
-        style="display:none; margin-bottom:20px; color:inherit; opacity:0.6; text-decoration:none; font-weight:800; border:1px solid #333; padding:10px; display:inline-block; width:100%">DASHBOARD</a>
-      <button id="logout-btn" class="btn" style="width:100%;">Sign Out</button>
+    <div id="auth-view">
+      <button id="google-login" class="btn" style="width:100%; margin-bottom:10px;">Login with Google</button>
+      <a href="/admin.html"
+        style="display:block; text-align:center; opacity:0.5; text-decoration:none; margin-top:10px;">Admin Login</a>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
@@ -275,100 +267,116 @@
 
     lucide.createIcons();
 
-    // --- THEME ---
-    const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.body.setAttribute('data-theme', savedTheme);
-    themeToggle.onclick = () => {
-      const next = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      document.body.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
+    // Theme
+    const themeBtn = document.getElementById('theme-toggle');
+    themeBtn.onclick = () => {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('moon-icon').style.display = isDark ? 'block' : 'none';
+      document.getElementById('sun-icon').style.display = isDark ? 'none' : 'block';
+      lucide.createIcons();
     };
 
-    // --- SIDEBAR ---
-    const loginBtn = document.getElementById('login-btn');
-    const sidebar = document.getElementById('profile-sidebar');
-    loginBtn.onclick = () => sidebar.classList.add('active');
-    document.getElementById('close-profile').onclick = () => sidebar.classList.remove('active');
+    // Sidebars
+    const openSidebar = (id) => document.getElementById(id).classList.add('active');
+    const closeSidebar = (id) => document.getElementById(id).classList.remove('active');
+    document.getElementById('btn-cart').onclick = () => openSidebar('cart-sidebar');
+    document.getElementById('close-cart').onclick = () => closeSidebar('cart-sidebar');
+    document.getElementById('login-btn').onclick = () => openSidebar('profile-sidebar');
+    document.getElementById('close-profile').onclick = () => closeSidebar('profile-sidebar');
 
-    // --- PRODUCTS SYNC ---
-    onSnapshot(query(collection(db, "products"), orderBy("createdAt", "desc")), snap => {
-      const list = document.getElementById('main-products-list');
-      list.innerHTML = "";
-      snap.forEach(docSnap => {
-        const p = docSnap.data();
-        if (p.visible === false) return; // Skip hidden products
-        list.innerHTML += `
-                    <div class="product-card">
-                        <img src="${p.main_image}" class="product-img">
-                        <div class="product-info">
-                            <h3>${p.name}</h3>
-                            <p style="opacity:0.5; font-size:0.8rem; margin:5px 0;">${p.category}</p>
-                            <div class="p-price">
-                                ${p.price_old ? `<span class="p-old-price">${p.price_old} EGP</span>` : ''}
-                                <span>${p.price_now} EGP</span>
-                            </div>
-                        </div>
+    // Products Sync
+    const prodList = document.getElementById('products-list');
+    onSnapshot(collection(db, "products"), snap => {
+      if (snap.empty) {
+        prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">No products available yet.</p>`;
+        return;
+      }
+      prodList.innerHTML = "";
+      snap.forEach(d => {
+        const p = d.data();
+        if (p.visible === false) return;
+        const card = document.createElement('div');
+        card.className = "product-card";
+        card.innerHTML = `
+                    <img src="${p.main_image}" class="product-img">
+                    <div class="product-info">
+                        <h3>${p.name}</h3>
+                        <p class="p-price">${p.price_now} EGP</p>
+                        <button class="btn btn-primary add-btn" style="width:100%; margin-top:1rem; padding:0.8rem; font-size:0.8rem;" 
+                            data-id="${d.id}" data-name="${p.name}" data-price="${p.price_now}" data-img="${p.main_image}">
+                            Add to Bag
+                        </button>
                     </div>
                 `;
+        prodList.appendChild(card);
       });
+
+      document.querySelectorAll('.add-btn').forEach(b => {
+        b.onclick = () => {
+          addToBag({ ...b.dataset });
+          openSidebar('cart-sidebar');
+        };
+      });
+    }, err => {
+      prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red">Error: ${err.message}. Check Firebase Rules.</p>`;
     });
 
-    // --- VISITOR TRACKING ---
-    async function trackVisitor(user = null) {
-      const statsRef = doc(db, "stats", "counters");
-      const updateData = { total_visitors: increment(1) };
-
-      if (!sessionStorage.getItem('v')) {
-        sessionStorage.setItem('v', '1');
-        if (!user) updateData.guests = increment(1);
-        await setDoc(statsRef, updateData, { merge: true });
+    // Bag Logic
+    let bag = JSON.parse(localStorage.getItem('bag')) || [];
+    const renderBag = () => {
+      const bagItems = document.getElementById('cart-items');
+      const totalBox = document.getElementById('checkout-box');
+      if (bag.length === 0) {
+        bagItems.innerHTML = `<p style="opacity:0.5">Bag is empty.</p>`;
+        totalBox.style.display = 'none';
+        return;
       }
+      totalBox.style.display = 'block';
+      bagItems.innerHTML = bag.map((item, idx) => `
+                <div style="display:flex; gap:15px; margin-bottom:1.5rem; align-items:center;">
+                    <img src="${item.img}" style="width:50px; height:70px; object-fit:cover; border-radius:5px;">
+                    <div style="flex:1"><h4>${item.name}</h4><p>${item.price} EGP × ${item.qty}</p></div>
+                    <button onclick="window.ripBag(${idx})" style="background:none; border:none; color:red; cursor:pointer;">×</button>
+                </div>
+            `).join('');
+      document.getElementById('bag-total').innerText = bag.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString() + " EGP";
+    };
 
-      if (user) {
-        const pid = user.providerData[0]?.providerId;
-        if (!localStorage.getItem('tracked_' + (pid || 'u'))) {
-          localStorage.setItem('tracked_' + pid, '1');
-          if (pid === 'google.com') updateData.google_users = increment(1);
-          if (pid === 'facebook.com') updateData.fb_users = increment(1);
-          await setDoc(statsRef, updateData, { merge: true });
-        }
-      }
+    const addToBag = (p) => {
+      const ex = bag.find(i => i.id === p.id);
+      if (ex) ex.qty++; else bag.push({ ...p, qty: 1 });
+      localStorage.setItem('bag', JSON.stringify(bag));
+      renderBag();
+    };
+
+    window.ripBag = (idx) => { bag.splice(idx, 1); localStorage.setItem('bag', JSON.stringify(bag)); renderBag(); };
+
+    document.getElementById('checkout-btn').onclick = async (e) => {
+      const name = document.getElementById('c-name').value;
+      const phone = document.getElementById('c-phone').value;
+      const addr = document.getElementById('c-addr').value;
+      if (!name || !phone || !addr) return alert("Fill details");
+      e.target.disabled = true;
+      try {
+        await addDoc(collection(db, "orders"), {
+          customer_name: name, phone, address: addr,
+          items: bag, total_price: bag.reduce((s, i) => s + (i.price * i.qty), 0),
+          status: 'Pending', createdAt: new Date()
+        });
+        alert("Order Placed!"); bag = []; localStorage.setItem('bag', "[]"); renderBag(); closeSidebar('cart-sidebar');
+      } catch (err) { alert(err.message); } finally { e.target.disabled = false; }
+    };
+
+    renderBag();
+
+    // Visitor Tracking
+    if (!sessionStorage.getItem('v')) {
+      sessionStorage.setItem('v', '1');
+      setDoc(doc(db, "stats", "counters"), { total_visitors: increment(1) }, { merge: true });
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      const outView = document.getElementById('logged-out-view');
-      const inView = document.getElementById('logged-in-view');
-      const adminLink = document.getElementById('admin-link');
-
-      if (user) {
-        trackVisitor(user);
-        outView.style.display = 'none';
-        inView.style.display = 'block';
-        document.getElementById('user-greeting').innerText = `Hello, ${user.displayName || user.email}`;
-
-        // Show Admin Dashboard link if user is in 'admins' collection
-        const adminSnap = await getDoc(doc(db, "admins", user.email));
-        if (adminSnap.exists()) adminLink.style.display = 'block';
-
-        if (user.photoURL) {
-          const img = document.createElement('img');
-          img.src = user.photoURL; img.className = 'user-avatar';
-          document.getElementById('user-icon').replaceWith(img);
-        }
-      } else {
-        trackVisitor();
-        outView.style.display = 'block';
-        inView.style.display = 'none';
-        adminLink.style.display = 'none';
-      }
-    });
-
-    document.getElementById('google-login').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-    document.getElementById('fb-login').onclick = () => signInWithPopup(auth, new FacebookAuthProvider());
-    document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => window.location.reload());
-
-    gsap.from("#hero-title", { y: 100, opacity: 0, duration: 1.5, ease: "expo.out" });
+    gsap.from("#hero-title", { y: 50, opacity: 0, duration: 1.5 });
   </script>
 </body>
 
