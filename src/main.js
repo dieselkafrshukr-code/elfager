@@ -83,14 +83,14 @@ if (prodList) {
       `;
       prodList.appendChild(card);
 
-      // Handle Size Selection
+      // --- Handle Events Inside the Card ---
       const sizeBtns = card.querySelectorAll('.size-btn');
-      sizeBtns.forEach(sb => {
-        sb.onclick = (e) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('size-btn')) {
           e.stopPropagation();
           sizeBtns.forEach(b => b.classList.remove('active'));
-          sb.classList.add('active');
-        };
+          e.target.classList.add('active');
+        }
       });
 
       // Handle Add to Bag
