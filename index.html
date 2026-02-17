@@ -219,27 +219,11 @@
       font-size: 0.75rem;
       opacity: 0.8;
     }
-
-    .admin-link {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      opacity: 0.2;
-      font-size: 0.7rem;
-      text-decoration: none;
-      color: var(--text-color);
-      z-index: 1000;
-      transition: opacity 0.3s;
-    }
-
-    .admin-link:hover {
-      opacity: 1;
-    }
   </style>
 </head>
 
 <body>
-  <a href="./admin.html" class="admin-link">⚙️ Admin</a>
+
   <nav>
     <div class="logo">Trico style</div>
     <div style="display: flex; gap: 1rem; align-items: center;">
@@ -309,6 +293,9 @@
       <textarea id="c-addr" placeholder="Address"
         style="width:100%; padding:10px; margin-bottom:10px; background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-color);"></textarea>
       <button id="checkout-btn" class="btn btn-primary" style="width:100%">إرسال الطلب عبر واتساب</button>
+      <a href="./admin.html"
+        style="display:block; text-align:center; margin-top:1.5rem; opacity:0.3; font-size:0.7rem; text-decoration:none; color:var(--text-color);">⚙️
+        Admin Dashboard</a>
     </div>
   </div>
 
