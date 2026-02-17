@@ -1,5 +1,11 @@
 // Main JavaScript for Trico style Store
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { firebaseConfig } from './config.js';
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // --- THEME LOGIC ---
 const themeBtn = document.getElementById('theme-toggle');
@@ -12,13 +18,8 @@ if (themeBtn) {
   const moonIcon = document.getElementById('moon-icon');
   const sunIcon = document.getElementById('sun-icon');
   if (moonIcon && sunIcon) {
-    if (savedTheme === 'dark') {
-      moonIcon.style.display = 'inline-block';
-      sunIcon.style.display = 'none';
-    } else {
-      moonIcon.style.display = 'none';
-      sunIcon.style.display = 'inline-block';
-    }
+    moonIcon.style.display = savedTheme === 'dark' ? 'inline-block' : 'none';
+    sunIcon.style.display = savedTheme === 'dark' ? 'none' : 'inline-block';
   }
 
   themeBtn.addEventListener('click', () => {
@@ -39,14 +40,8 @@ if (themeBtn) {
 }
 
 // --- SIDEBAR LOGIC ---
-const openSidebar = (id) => {
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-};
-const closeSidebar = (id) => {
-  const el = document.getElementById(id);
-  if (el) el.classList.remove('active');
-};
+const openSidebar = (id) => { document.getElementById(id)?.classList.add('active'); };
+const closeSidebar = (id) => { document.getElementById(id)?.classList.remove('active'); };
 
 const cartBtn = document.getElementById('btn-cart');
 if (cartBtn) cartBtn.onclick = () => openSidebar('cart-sidebar');
@@ -55,41 +50,42 @@ const closeCart = document.getElementById('close-cart');
 if (closeCart) closeCart.onclick = () => closeSidebar('cart-sidebar');
 
 
-// --- STATIC PRODUCTS DATA ---
-const products = [];
-
 // --- PRODUCTS DISPLAY ---
 const prodList = document.getElementById('products-list');
 if (prodList) {
-  // Render static products
-  prodList.innerHTML = "";
-  if (products.length === 0) {
-    prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">Coming soon...</p>`;
-  } else {
-    products.forEach(p => {
+  onSnapshot(collection(db, "products"), (snapshot) => {
+    prodList.innerHTML = "";
+    if (snapshot.empty) {
+      prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">Coming soon...</p>`;
+      return;
+    }
+    snapshot.forEach((doc) => {
+      const p = doc.data();
+      const sizesHtml = p.sizes ? p.sizes.split(',').map(s => `<span class="size-badge">${s.trim()}</span>`).join('') : '';
       const card = document.createElement('div');
       card.className = "product-card";
       card.innerHTML = `
-                  <img src="${p.main_image}" class="product-img">
-                  <div class="product-info">
-                      <h3>${p.name}</h3>
-                      <p class="p-price">${p.price_now} EGP</p>
-                      <button class="btn btn-primary add-btn" style="width:100%; margin-top:1rem; padding:0.8rem; font-size:0.8rem;" 
-                          data-id="${p.id}" data-name="${p.name}" data-price="${p.price_now}" data-img="${p.main_image}">
-                          Add to Bag
-                      </button>
-                  </div>
-              `;
+        <img src="${p.image}" class="product-img">
+        <div class="product-info">
+          <h3>${p.name}</h3>
+          <p>
+            ${p.priceBefore ? `<span class="p-price-old">${p.priceBefore} EGP</span>` : ''}
+            <span class="p-price">${p.priceNow} EGP</span>
+          </p>
+          <div class="p-sizes">${sizesHtml}</div>
+          <button class="btn btn-primary add-btn" style="width:100%; margin-top:1rem; padding:0.8rem; font-size:0.8rem;" 
+              data-id="${doc.id}" data-name="${p.name}" data-price="${p.priceNow}" data-img="${p.image}">
+              Add to Bag
+          </button>
+        </div>
+      `;
       prodList.appendChild(card);
     });
 
     document.querySelectorAll('.add-btn').forEach(b => {
-      b.onclick = () => {
-        addToBag({ ...b.dataset });
-        openSidebar('cart-sidebar');
-      };
+      b.onclick = () => { addToBag({ ...b.dataset }); openSidebar('cart-sidebar'); };
     });
-  }
+  });
 }
 
 // --- BAG LOGIC ---
@@ -122,17 +118,15 @@ const renderBag = () => {
 
   // Add event listeners to remove buttons
   document.querySelectorAll('.remove-item-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const index = parseInt(this.getAttribute('data-index'));
-      bag.splice(index, 1);
+    btn.onclick = () => {
+      bag.splice(btn.dataset.index, 1);
       localStorage.setItem('bag', JSON.stringify(bag));
       renderBag();
-    });
+    };
   });
 
-  if (document.getElementById('bag-total')) {
-    document.getElementById('bag-total').innerText = bag.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString() + " EGP";
-  }
+  const total = bag.reduce((s, i) => s + (i.price * i.qty), 0);
+  if (document.getElementById('bag-total')) document.getElementById('bag-total').innerText = total.toLocaleString() + " EGP";
 };
 
 const addToBag = (p) => {
@@ -145,7 +139,7 @@ const addToBag = (p) => {
 // --- WHATSAPP CHECKOUT ---
 const checkoutBtn = document.getElementById('checkout-btn');
 if (checkoutBtn) {
-  checkoutBtn.onclick = (e) => {
+  checkoutBtn.onclick = () => {
     const name = document.getElementById('c-name').value;
     const phone = document.getElementById('c-phone').value;
     const addr = document.getElementById('c-addr').value;
@@ -153,25 +147,14 @@ if (checkoutBtn) {
 
     // Create WhatsApp message
     const total = bag.reduce((s, i) => s + (i.price * i.qty), 0);
-    let message = `*طلب جديد من Trico style*\n\n`;
-    message += `*الاسم:* ${name}\n`;
-    message += `*الهاتف:* ${phone}\n`;
-    message += `*العنوان:* ${addr}\n\n`;
-    message += `*المنتجات:*\n`;
+    let message = `*طلب جديد من Trico style*\n\n*الاسم:* ${name}\n*الهاتف:* ${phone}\n*العنوان:* ${addr}\n\n*المنتجات:*\n`;
 
-    bag.forEach((item, index) => {
-      message += `${index + 1}. ${item.name} - ${item.price} EGP × ${item.qty}\n`;
-    });
+    bag.forEach((item, index) => { message += `${index + 1}. ${item.name} - ${item.price} EGP × ${item.qty}\n`; });
 
     message += `\n*الإجمالي:* ${total.toLocaleString()} EGP`;
 
-    // Encode message for URL
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = '201027495401'; // Without + or 00
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-
     // Open WhatsApp
-    window.open(whatsappUrl, '_blank');
+    window.open(`https://wa.me/201027495401?text=${encodeURIComponent(message)}`, '_blank');
 
     // Clear cart after sending
     setTimeout(() => {
@@ -190,7 +173,3 @@ renderBag();
 // GSAP Animations
 gsap.from("#hero-title", { y: 50, opacity: 0, duration: 1.5, ease: "power3.out" });
 gsap.from(".logo", { y: -20, opacity: 0, duration: 1, delay: 0.2 });
-// Removed icon animation to prevent disappearing issue
-
-// Final icon refresh
-// Removed lucide refresh

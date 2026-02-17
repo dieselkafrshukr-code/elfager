@@ -197,9 +197,49 @@
       }
     }
   </style>
+  <style>
+    .p-price-old {
+      text-decoration: line-through;
+      opacity: 0.5;
+      font-size: 0.9rem;
+      margin-right: 8px;
+    }
+
+    .p-sizes {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .size-badge {
+      padding: 2px 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .admin-link {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      opacity: 0.2;
+      font-size: 0.7rem;
+      text-decoration: none;
+      color: var(--text-color);
+      z-index: 1000;
+      transition: opacity 0.3s;
+    }
+
+    .admin-link:hover {
+      opacity: 1;
+    }
+  </style>
 </head>
 
 <body>
+  <a href="./admin.html" class="admin-link">⚙️ Admin</a>
   <nav>
     <div class="logo">Trico style</div>
     <div style="display: flex; gap: 1rem; align-items: center;">
@@ -235,10 +275,14 @@
   <main class="hero">
     <h1 id="hero-title">TRICO</h1>
     <p>Modern fashion for the confident you. Style with elegance.</p>
+    <a href="#store" class="btn btn-primary" style="margin-top:2rem">Shop Collection</a>
   </main>
 
-
-  <!-- Products section removed -->
+  <section class="products-section" id="store">
+    <div class="grid" id="products-list">
+      <p style="grid-column: 1/-1; text-align:center; opacity:0.5">Fetching collection...</p>
+    </div>
+  </section>
 
   <!-- Sidebars -->
   <div id="cart-sidebar" class="sidebar">
