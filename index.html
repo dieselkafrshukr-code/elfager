@@ -214,12 +214,28 @@
       flex-wrap: wrap;
     }
 
-    .size-badge {
-      padding: 2px 8px;
+    .size-btn {
+      padding: 5px 12px;
       border: 1px solid var(--border-color);
+      background: none;
+      color: var(--text-color);
       border-radius: 4px;
       font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
       opacity: 0.8;
+    }
+
+    .size-btn:hover {
+      border-color: var(--text-color);
+      opacity: 1;
+    }
+
+    .size-btn.active {
+      background: var(--text-color);
+      color: var(--bg-color);
+      border-color: var(--text-color);
+      opacity: 1;
     }
   </style>
 </head>

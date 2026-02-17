@@ -61,7 +61,9 @@ if (prodList) {
     }
     snapshot.forEach((doc) => {
       const p = doc.data();
-      const sizesHtml = p.sizes ? p.sizes.split(',').map(s => `<span class="size-badge">${s.trim()}</span>`).join('') : '';
+      const sizesArray = p.sizes ? p.sizes.split(',').map(s => s.trim()).filter(s => s !== "") : [];
+      const sizesHtml = sizesArray.map(s => `<button class="size-btn" data-size="${s}">${s}</button>`).join('');
+
       const card = document.createElement('div');
       card.className = "product-card";
       card.innerHTML = `
@@ -72,18 +74,36 @@ if (prodList) {
             ${p.priceBefore ? `<span class="p-price-old">${p.priceBefore} EGP</span>` : ''}
             <span class="p-price">${p.priceNow} EGP</span>
           </p>
-          <div class="p-sizes">${sizesHtml}</div>
+          ${sizesArray.length > 0 ? `<div class="p-sizes" id="sizes-${doc.id}">${sizesHtml}</div>` : ''}
           <button class="btn btn-primary add-btn" style="width:100%; margin-top:1rem; padding:0.8rem; font-size:0.8rem;" 
-              data-id="${doc.id}" data-name="${p.name}" data-price="${p.priceNow}" data-img="${p.image}">
+              data-id="${doc.id}" data-name="${p.name}" data-price="${p.priceNow}" data-img="${p.image}" data-has-sizes="${sizesArray.length > 0}">
               Add to Bag
           </button>
         </div>
       `;
       prodList.appendChild(card);
+
+      // Handle Size Selection
+      const sizeBtns = card.querySelectorAll('.size-btn');
+      sizeBtns.forEach(sb => {
+        sb.onclick = () => {
+          sizeBtns.forEach(b => b.classList.remove('active'));
+          sb.classList.add('active');
+        };
+      });
     });
 
     document.querySelectorAll('.add-btn').forEach(b => {
-      b.onclick = () => { addToBag({ ...b.dataset }); openSidebar('cart-sidebar'); };
+      b.onclick = () => {
+        let selectedSize = null;
+        if (b.dataset.hasSizes === "true") {
+          const activeBtn = b.parentElement.querySelector('.size-btn.active');
+          if (!activeBtn) return alert("الرجاء اختيار المقاس أولاً");
+          selectedSize = activeBtn.dataset.size;
+        }
+        addToBag({ ...b.dataset, size: selectedSize });
+        openSidebar('cart-sidebar');
+      };
     });
   });
 }
@@ -108,7 +128,11 @@ const renderBag = () => {
     itemDiv.style.cssText = 'display:flex; gap:15px; margin-bottom:1.5rem; align-items:center;';
     itemDiv.innerHTML = `
       <img src="${item.img}" style="width:50px; height:70px; object-fit:cover; border-radius:5px;">
-      <div style="flex:1"><h4>${item.name}</h4><p>${item.price} EGP × ${item.qty}</p></div>
+      <div style="flex:1">
+        <h4 style="font-size:0.9rem;">${item.name}</h4>
+        <p style="font-size:0.8rem; opacity:0.7;">${item.size ? `المقاس: ${item.size}` : ''}</p>
+        <p style="font-size:0.8rem; font-weight:600;">${item.price} EGP × ${item.qty}</p>
+      </div>
       <button class="remove-item-btn" data-index="${idx}" style="background:none; border:none; color:var(--text-color); cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center;">
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
@@ -130,7 +154,8 @@ const renderBag = () => {
 };
 
 const addToBag = (p) => {
-  const ex = bag.find(i => i.id === p.id);
+  // Find item by ID AND Size
+  const ex = bag.find(i => i.id === p.id && i.size === p.size);
   if (ex) ex.qty++; else bag.push({ ...p, qty: 1 });
   localStorage.setItem('bag', JSON.stringify(bag));
   renderBag();
@@ -148,7 +173,9 @@ if (checkoutBtn) {
     const total = bag.reduce((s, i) => s + (i.price * i.qty), 0);
 
     let message = `*طلب جديد من Trico style*\n\n*الاسم:* ${name}\n*الهاتف:* ${phone}\n*العنوان:* ${addr}\n\n*المنتجات:*\n`;
-    bag.forEach((item, index) => { message += `${index + 1}. ${item.name} - ${item.price} EGP × ${item.qty}\n`; });
+    bag.forEach((item, index) => {
+      message += `${index + 1}. ${item.name} ${item.size ? `(مقاس: ${item.size})` : ''} - ${item.price} EGP × ${item.qty}\n`;
+    });
     message += `\n*الإجمالي:* ${total.toLocaleString()} EGP`;
 
     window.open(`https://wa.me/201027495401?text=${encodeURIComponent(message)}`, '_blank');
