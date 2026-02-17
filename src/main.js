@@ -139,30 +139,41 @@ const addToBag = (p) => {
 // --- WHATSAPP CHECKOUT ---
 const checkoutBtn = document.getElementById('checkout-btn');
 if (checkoutBtn) {
-  checkoutBtn.onclick = () => {
+  checkoutBtn.onclick = async () => {
     const name = document.getElementById('c-name').value;
     const phone = document.getElementById('c-phone').value;
     const addr = document.getElementById('c-addr').value;
     if (!name || !phone || !addr) return alert("Please fill in all details");
 
-    // Create WhatsApp message
     const total = bag.reduce((s, i) => s + (i.price * i.qty), 0);
+
+    // Save to Firebase first
+    try {
+      await addDoc(collection(db, "orders"), {
+        customerName: name,
+        customerPhone: phone,
+        customerAddress: addr,
+        items: bag,
+        total: total,
+        status: 'جديد',
+        createdAt: new Date()
+      });
+    } catch (e) {
+      console.error("Error saving order:", e);
+    }
+
     let message = `*طلب جديد من Trico style*\n\n*الاسم:* ${name}\n*الهاتف:* ${phone}\n*العنوان:* ${addr}\n\n*المنتجات:*\n`;
-
     bag.forEach((item, index) => { message += `${index + 1}. ${item.name} - ${item.price} EGP × ${item.qty}\n`; });
-
     message += `\n*الإجمالي:* ${total.toLocaleString()} EGP`;
 
-    // Open WhatsApp
     window.open(`https://wa.me/201027495401?text=${encodeURIComponent(message)}`, '_blank');
 
-    // Clear cart after sending
     setTimeout(() => {
       bag = [];
       localStorage.setItem('bag', "[]");
       renderBag();
       closeSidebar('cart-sidebar');
-      alert('تم فتح واتساب! أرسل الرسالة لإتمام الطلب');
+      alert('تم إرسال الطلب وحفظه في لوحة التحكم! أرسل رسالة الواتساب الآن.');
     }, 500);
   };
 }

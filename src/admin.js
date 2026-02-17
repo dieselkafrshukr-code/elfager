@@ -19,11 +19,52 @@ onAuthStateChanged(auth, (user) => {
         loginView.style.display = 'none';
         adminContent.style.display = 'block';
         loadProducts();
+        loadOrders(); // Load orders on login
     } else {
         loginView.style.display = 'block';
         adminContent.style.display = 'none';
     }
 });
+
+// Load Orders
+function loadOrders() {
+    const ordersContainer = document.getElementById('orders-container');
+    onSnapshot(collection(db, "orders"), (snapshot) => {
+        ordersContainer.innerHTML = "";
+        if (snapshot.empty) {
+            ordersContainer.innerHTML = '<p style="opacity:0.5; text-align:center;">لا توجد طلبات حالياً.</p>';
+            return;
+        }
+        snapshot.forEach((docSnapshot) => {
+            const o = docSnapshot.data();
+            const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleString('ar-EG') : 'غير معروف';
+            const div = document.createElement('div');
+            div.className = "order-card";
+            div.innerHTML = `
+        <div class="order-header">
+          <strong>العميل: ${o.customerName}</strong>
+          <span>${date}</span>
+        </div>
+        <div class="order-details">
+          <p>📞 ${o.customerPhone}</p>
+          <p>📍 ${o.customerAddress}</p>
+          <p>📦 المنتجات: ${o.items.map(i => `${i.name} (${i.qty})`).join(', ')}</p>
+          <p style="margin-top:10px; font-weight:800; color:var(--accent);">الإجمالي: ${o.total.toLocaleString()} EGP</p>
+        </div>
+        <button class="delete-btn" data-id="${docSnapshot.id}" style="margin-top:10px; font-size:0.7rem;">حذف الطلب</button>
+      `;
+            ordersContainer.appendChild(div);
+        });
+
+        document.querySelectorAll('#orders-container .delete-btn').forEach(btn => {
+            btn.onclick = async () => {
+                if (confirm("هل تريد مسح هذا الطلب؟")) {
+                    await deleteDoc(doc(db, "orders", btn.dataset.id));
+                }
+            };
+        });
+    });
+}
 
 // Login Handler
 loginForm.addEventListener('submit', async (e) => {
