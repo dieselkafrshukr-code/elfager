@@ -66,32 +66,7 @@ if (closeCart) closeCart.onclick = () => closeSidebar('cart-sidebar');
 
 
 // --- STATIC PRODUCTS DATA ---
-const products = [
-  {
-    id: "1",
-    name: "Classic Tee - Black",
-    price_now: 450,
-    main_image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: "2",
-    name: "Minimalist Hoodie",
-    price_now: 850,
-    main_image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: "3",
-    name: "Signature Cap",
-    price_now: 300,
-    main_image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  },
-  {
-    id: "4",
-    name: "Urban Jacket",
-    price_now: 1200,
-    main_image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
-  }
-];
+const products = [];
 
 // --- PRODUCTS DISPLAY ---
 const prodList = document.getElementById('products-list');
@@ -99,7 +74,7 @@ if (prodList) {
   // Render static products
   prodList.innerHTML = "";
   if (products.length === 0) {
-    prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">No products available.</p>`;
+    prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">Coming soon...</p>`;
   } else {
     products.forEach(p => {
       const card = document.createElement('div');
@@ -141,13 +116,29 @@ const renderBag = () => {
   }
   if (totalBox) totalBox.style.display = 'block';
 
-  bagItems.innerHTML = bag.map((item, idx) => `
-            <div style="display:flex; gap:15px; margin-bottom:1.5rem; align-items:center;">
-                <img src="${item.img}" style="width:50px; height:70px; object-fit:cover; border-radius:5px;">
-                <div style="flex:1"><h4>${item.name}</h4><p>${item.price} EGP × ${item.qty}</p></div>
-                <button onclick="window.ripBag(${idx})" style="background:none; border:none; color:var(--text-color); cursor:pointer;"><i data-lucide="x"></i></button>
-            </div>
-        `).join('');
+  bagItems.innerHTML = '';
+  bag.forEach((item, idx) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.style.cssText = 'display:flex; gap:15px; margin-bottom:1.5rem; align-items:center;';
+    itemDiv.innerHTML = `
+      <img src="${item.img}" style="width:50px; height:70px; object-fit:cover; border-radius:5px;">
+      <div style="flex:1"><h4>${item.name}</h4><p>${item.price} EGP × ${item.qty}</p></div>
+      <button class="remove-item-btn" data-index="${idx}" style="background:none; border:none; color:var(--text-color); cursor:pointer;">
+        <i data-lucide="x"></i>
+      </button>
+    `;
+    bagItems.appendChild(itemDiv);
+  });
+
+  // Add event listeners to remove buttons
+  document.querySelectorAll('.remove-item-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const index = parseInt(this.getAttribute('data-index'));
+      bag.splice(index, 1);
+      localStorage.setItem('bag', JSON.stringify(bag));
+      renderBag();
+    });
+  });
 
   if (document.getElementById('bag-total')) {
     document.getElementById('bag-total').innerText = bag.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString() + " EGP";
@@ -163,14 +154,7 @@ const addToBag = (p) => {
   renderBag();
 };
 
-// Expose ripBag to window so onclick works in innerHTML
-window.ripBag = (idx) => {
-  bag.splice(idx, 1);
-  localStorage.setItem('bag', JSON.stringify(bag));
-  renderBag();
-};
-
-// --- SIMULATED CHECKOUT ---
+// --- WHATSAPP CHECKOUT ---
 const checkoutBtn = document.getElementById('checkout-btn');
 if (checkoutBtn) {
   checkoutBtn.onclick = (e) => {
@@ -179,20 +163,36 @@ if (checkoutBtn) {
     const addr = document.getElementById('c-addr').value;
     if (!name || !phone || !addr) return alert("Please fill in all details");
 
-    e.target.disabled = true;
-    e.target.innerText = "Processing...";
+    // Create WhatsApp message
+    const total = bag.reduce((s, i) => s + (i.price * i.qty), 0);
+    let message = `*طلب جديد من Trico style*\n\n`;
+    message += `*الاسم:* ${name}\n`;
+    message += `*الهاتف:* ${phone}\n`;
+    message += `*العنوان:* ${addr}\n\n`;
+    message += `*المنتجات:*\n`;
 
-    // Simulate network request
+    bag.forEach((item, index) => {
+      message += `${index + 1}. ${item.name} - ${item.price} EGP × ${item.qty}\n`;
+    });
+
+    message += `\n*الإجمالي:* ${total.toLocaleString()} EGP`;
+
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappNumber = '201027495401'; // Without + or 00
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank');
+
+    // Clear cart after sending
     setTimeout(() => {
-      alert(`Order Placed Successfully! \n(This is a demo, no data was sent).\n\nCustomer: ${name}\nTotal: ${bag.reduce((s, i) => s + (i.price * i.qty), 0)} EGP`);
       bag = [];
       localStorage.setItem('bag', "[]");
       renderBag();
       closeSidebar('cart-sidebar');
-
-      e.target.disabled = false;
-      e.target.innerText = "Order Now";
-    }, 1500);
+      alert('تم فتح واتساب! أرسل الرسالة لإتمام الطلب');
+    }, 500);
   };
 }
 
