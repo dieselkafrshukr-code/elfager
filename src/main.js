@@ -1,8 +1,9 @@
-import './style.css'
-import { gsap } from 'gsap'
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, increment } from "firebase/firestore";
+// import './style.css' // Removed: browsers can't import CSS in JS directly without a bundler
+// import { gsap } from 'gsap' // Removed: We use the global 'gsap' object from the script tag in HTML
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { firebaseConfig } from './config.js';
 
 // Initialize Firebase
