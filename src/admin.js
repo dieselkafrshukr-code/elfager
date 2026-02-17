@@ -3,7 +3,7 @@ import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { firebaseConfig } from './config.js';
 
-// Initialize Firebase
+// Initialize
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -12,18 +12,14 @@ const loginView = document.getElementById('login-view');
 const adminContent = document.getElementById('admin-content');
 const loginForm = document.getElementById('login-form');
 const logoutBtn = document.getElementById('logout-btn');
-const form = document.getElementById('add-product-form');
+const productForm = document.getElementById('add-product-form');
 
 let editId = null;
 
-// --- FORCE LOGOUT ON EVERY LOAD ---
-signOut(auth).then(() => {
-    console.log("Welcome! Please log in.");
-    loginView.style.display = 'block';
-    adminContent.style.display = 'none';
-});
+// --- 1. Force Logout on Load for non-persistent sessions ---
+signOut(auth);
 
-// Auth State Listener
+// --- 2. Auth State Listener ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         loginView.style.display = 'none';
@@ -36,32 +32,46 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Login Handler
+// --- 3. Login Handler (Friendly Errors) ---
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-password').value;
-    const btn = e.target.querySelector('button');
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-password').value.trim();
+    const btn = document.getElementById('login-submit-btn');
 
-    btn.innerText = "جاري الدخول...";
+    btn.innerText = "جاري التحقق...";
     btn.disabled = true;
 
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (error) {
-        console.error(error);
-        alert("بيانات الدخول خاطئة! تأكد من الإيميل والباسورد.");
+    } catch (err) {
+        console.error(err);
+        let msg = "بيانات الدخول خاطئة!";
+        if (err.code === "auth/user-not-found") msg = "هذا الحساب غير موجود في Firebase!";
+        if (err.code === "auth/wrong-password") msg = "كلمة المرور غير صحيحة!";
+        if (err.code === "auth/operation-not-allowed") msg = "يجب تفعيل Email/Password في Firebase Console!";
+        alert(msg);
+    } finally {
         btn.innerText = "دخول";
         btn.disabled = false;
     }
 });
 
-// Logout Handler
-logoutBtn.onclick = () => {
-    signOut(auth).then(() => location.reload());
-};
+// --- 4. Tabs System ---
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-// Convert Image to Base64
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    };
+});
+
+// Logout
+logoutBtn.onclick = () => signOut(auth).then(() => location.reload());
+
+// --- 5. Base64 Image Conversion ---
 const toBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -69,127 +79,111 @@ const toBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = error => reject(error);
 });
 
-// Product Form Submission
-form.addEventListener('submit', async (e) => {
+// --- 6. Form Submission (Add/Edit) ---
+productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const btn = document.getElementById('product-submit-btn');
+    const status = document.getElementById('upload-status');
 
-    const name = document.getElementById('p-name').value;
-    const fileInput = document.getElementById('p-image-file');
-    const file = fileInput.files[0];
-    const sizes = document.getElementById('p-sizes').value;
-    const priceNow = parseFloat(document.getElementById('p-price-now').value);
-    const priceBefore = document.getElementById('p-price-before').value ? parseFloat(document.getElementById('p-price-before').value) : null;
-
-    const progressDiv = document.getElementById('upload-progress');
-    progressDiv.style.display = 'block';
-    progressDiv.innerText = "جاري الحفظ في قاعدة البيانات...";
+    btn.disabled = true;
+    status.style.display = 'block';
 
     try {
-        let productData = {
-            name,
-            sizes,
-            priceNow,
-            priceBefore,
+        const file = document.getElementById('p-image-file').files[0];
+        let data = {
+            name: document.getElementById('p-name').value,
+            sizes: document.getElementById('p-sizes').value,
+            priceNow: parseFloat(document.getElementById('p-price-now').value),
+            priceBefore: document.getElementById('p-price-before').value ? parseFloat(document.getElementById('p-price-before').value) : null,
             updatedAt: serverTimestamp()
         };
 
-        if (file) {
-            productData.image = await toBase64(file);
-        }
+        if (file) data.image = await toBase64(file);
 
         if (editId) {
-            await updateDoc(doc(db, "products", editId), productData);
-            alert("✅ تم تحديث المنتج!");
-            editId = null;
-            form.querySelector('button').innerText = "إضافة المنتج";
+            await updateDoc(doc(db, "products", editId), data);
+            alert("تم التحديث!");
         } else {
-            if (!file) throw new Error("الرجاء اختيار صورة");
-            productData.createdAt = serverTimestamp();
-            await addDoc(collection(db, "products"), productData);
-            alert("✅ تم إضافة المنتج بنجاح!");
+            if (!file) throw new Error("يجب اختيار صورة للمنتج الجديد");
+            data.createdAt = serverTimestamp();
+            await addDoc(collection(db, "products"), data);
+            alert("تمت الإضافة!");
         }
 
-        form.reset();
-        fileInput.required = true;
+        productForm.reset();
+        editId = null;
+        document.getElementById('form-title').innerText = "إضافة منتج جديد";
+        btn.innerText = "حفظ المنتج";
     } catch (error) {
-        alert("❌ خطأ: " + error.message);
+        alert("حدث خطأ: " + error.message);
     } finally {
-        progressDiv.style.display = 'none';
+        btn.disabled = false;
+        status.style.display = 'none';
     }
 });
 
 function loadProducts() {
-    const productsContainer = document.getElementById('products-container');
-    onSnapshot(collection(db, "products"), (snapshot) => {
-        productsContainer.innerHTML = "";
-        snapshot.forEach((docSnapshot) => {
-            const p = docSnapshot.data();
+    const container = document.getElementById('products-container');
+    onSnapshot(collection(db, "products"), (snap) => {
+        container.innerHTML = "";
+        snap.forEach(dSnapshot => {
+            const p = dSnapshot.data();
             const div = document.createElement('div');
             div.className = "product-item";
-            div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#1a1a1a; padding:10px; margin-bottom:10px; border-radius:5px; border:1px solid #333;";
+            div.style.display = "flex";
+            div.style.alignItems = "center";
+            div.style.gap = "15px";
             div.innerHTML = `
-        <div style="display:flex; gap:10px; align-items:center;">
-            <img src="${p.image}" style="width:40px; height:40px; object-fit:cover; border-radius:3px;">
-            <span style="font-size:14px;">${p.name} - ${p.priceNow} EGP</span>
-        </div>
-        <div>
-            <button class="edit-btn" style="background:#444; color:white; border:none; padding:5px 8px; font-size:11px; cursor:pointer; border-radius:3px;" data-id="${docSnapshot.id}">تعديل</button>
-            <button class="delete-btn" style="background:#ff3e3e; color:white; border:none; padding:5px 8px; font-size:11px; cursor:pointer; border-radius:3px;" data-id="${docSnapshot.id}">حذف</button>
-        </div>
+        <img src="${p.image}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
+        <div style="flex:1"><strong>${p.name}</strong><br><small>${p.priceNow} EGP</small></div>
+        <button class="edit-btn" style="background:#444; color:white; border:none; padding:5px 10px; cursor:pointer;" data-id="${dSnapshot.id}">تعديل</button>
+        <button class="del-btn" style="background:#ff3e3e; color:white; border:none; padding:5px 10px; cursor:pointer;" data-id="${dSnapshot.id}">حذف</button>
       `;
-            productsContainer.appendChild(div);
+            container.appendChild(div);
         });
 
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.onclick = () => {
-                const id = btn.dataset.id;
-                const p = snapshot.docs.find(d => d.id === id).data();
+        document.querySelectorAll('.edit-btn').forEach(eb => {
+            eb.onclick = () => {
+                editId = eb.dataset.id;
+                const p = snap.docs.find(d => d.id === editId).data();
                 document.getElementById('p-name').value = p.name;
                 document.getElementById('p-sizes').value = p.sizes;
                 document.getElementById('p-price-now').value = p.priceNow;
                 document.getElementById('p-price-before').value = p.priceBefore || "";
-                document.getElementById('p-image-file').required = false;
-                editId = id;
-                form.querySelector('button').innerText = "تحديث المنتج الحالي";
+                document.getElementById('form-title').innerText = "تعديل منتج: " + p.name;
+                document.getElementById('product-submit-btn').innerText = "تحديث البيانات";
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
         });
 
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.onclick = async () => {
-                if (confirm("هل تريد حذف هذا المنتج نهائياً؟")) await deleteDoc(doc(db, "products", btn.dataset.id));
-            };
+        document.querySelectorAll('.del-btn').forEach(db => {
+            db.onclick = async () => { if (confirm("حذف؟")) await deleteDoc(doc(db, "products", db.dataset.id)); };
         });
     });
 }
 
 function loadOrders() {
-    const ordersContainer = document.getElementById('orders-container');
-    onSnapshot(collection(db, "orders"), (snapshot) => {
-        ordersContainer.innerHTML = "";
-        if (snapshot.empty) {
-            ordersContainer.innerHTML = '<p style="opacity:0.5; text-align:center;">لا توجد طلبات حالياً.</p>';
-            return;
-        }
-        snapshot.forEach((docSnapshot) => {
-            const o = docSnapshot.data();
+    const container = document.getElementById('orders-container');
+    onSnapshot(collection(db, "orders"), (snap) => {
+        container.innerHTML = "";
+        if (snap.empty) { container.innerHTML = '<p style="text-align:center; opacity:0.3;">لا يوجد طلبات حالياً.</p>'; return; }
+        snap.forEach(dSnapshot => {
+            const o = dSnapshot.data();
             const div = document.createElement('div');
             div.className = "order-card";
             div.innerHTML = `
-        <div class="order-header"><strong>${o.customerName}</strong></div>
-        <div class="order-details">
-          <p>📞 ${o.customerPhone}</p>
+        <div class="order-header"><strong>${o.customerName}</strong><small>${o.customerPhone}</small></div>
+        <div style="font-size:0.9rem; opacity:0.8;">
           <p>📍 ${o.customerAddress}</p>
           <p>📦 ${o.items.map(i => `${i.name}(${i.qty})`).join(', ')}</p>
-          <p style="color:var(--accent); font-weight:800; margin-top:5px;">الإجمالي: ${o.total} EGP</p>
+          <p style="text-align:left; font-weight:800; color:#fff;">Total: ${o.total} EGP</p>
         </div>
-        <button class="delete-btn" data-id="${docSnapshot.id}" style="background:#ff3e3e; color:white; border:none; padding:5px 10px; border-radius:4px; font-size:11px; margin-top:10px; cursor:pointer;">مسح الطلب</button>
+        <button class="del-btn" style="background:#ff3e3e; color:white; border:none; padding:5px 10px; cursor:pointer; width:100%; border-radius:4px; margin-top:10px;" data-id="${dSnapshot.id}">مسح الطلب من السجل</button>
       `;
-            ordersContainer.appendChild(div);
+            container.appendChild(div);
         });
-
-        document.querySelectorAll('#orders-container .delete-btn').forEach(btn => {
-            btn.onclick = async () => { if (confirm("مسح سجل هذا الطلب؟")) await deleteDoc(doc(db, "orders", btn.dataset.id)); };
+        document.querySelectorAll('#orders-tab .del-btn').forEach(db => {
+            db.onclick = async () => { if (confirm("مسح؟")) await deleteDoc(doc(db, "orders", db.dataset.id)); };
         });
     });
 }
