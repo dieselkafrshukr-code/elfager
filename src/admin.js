@@ -1,18 +1,23 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { firebaseConfig } from './config.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// --- 1. FORCE NO PERSISTENCE (Safe & Strict) ---
+setPersistence(auth, inMemoryPersistence)
+    .then(() => signOut(auth)) // Logout immediately on load/refresh
+    .catch((err) => console.error("Persistence Error:", err));
+
 const loginView = document.getElementById('login-view');
 const adminContent = document.getElementById('admin-content');
 const productForm = document.getElementById('add-product-form');
 let editId = null;
 
-// --- Login Check ---
+// --- 2. Login Check ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         loginView.style.display = 'none';
