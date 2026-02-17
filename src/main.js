@@ -74,7 +74,7 @@ if (prodList) {
             ${p.priceBefore ? `<span class="p-price-old">${p.priceBefore} EGP</span>` : ''}
             <span class="p-price">${p.priceNow} EGP</span>
           </p>
-          ${sizesArray.length > 0 ? `<div class="p-sizes" id="sizes-${doc.id}">${sizesHtml}</div>` : ''}
+          ${sizesArray.length > 0 ? `<div class="p-sizes">${sizesHtml}</div>` : ''}
           <button class="btn btn-primary add-btn" style="width:100%; margin-top:1rem; padding:0.8rem; font-size:0.8rem;" 
               data-id="${doc.id}" data-name="${p.name}" data-price="${p.priceNow}" data-img="${p.image}" data-has-sizes="${sizesArray.length > 0}">
               Add to Bag
@@ -86,22 +86,23 @@ if (prodList) {
       // Handle Size Selection
       const sizeBtns = card.querySelectorAll('.size-btn');
       sizeBtns.forEach(sb => {
-        sb.onclick = () => {
+        sb.onclick = (e) => {
+          e.stopPropagation();
           sizeBtns.forEach(b => b.classList.remove('active'));
           sb.classList.add('active');
         };
       });
-    });
 
-    document.querySelectorAll('.add-btn').forEach(b => {
-      b.onclick = () => {
+      // Handle Add to Bag
+      const addBtn = card.querySelector('.add-btn');
+      addBtn.onclick = () => {
         let selectedSize = null;
-        if (b.dataset.hasSizes === "true") {
-          const activeBtn = b.parentElement.querySelector('.size-btn.active');
+        if (addBtn.dataset.hasSizes === "true") {
+          const activeBtn = card.querySelector('.size-btn.active');
           if (!activeBtn) return alert("الرجاء اختيار المقاس أولاً");
           selectedSize = activeBtn.dataset.size;
         }
-        addToBag({ ...b.dataset, size: selectedSize });
+        addToBag({ ...addBtn.dataset, size: selectedSize });
         openSidebar('cart-sidebar');
       };
     });
