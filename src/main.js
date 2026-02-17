@@ -1,13 +1,5 @@
-// Main JavaScript for Zero Clothing Store
+// Main JavaScript for Trico style Store
 
-// Check if lucide exists, if not wait for window load
-if (typeof lucide !== 'undefined') {
-  lucide.createIcons();
-} else {
-  window.addEventListener('load', () => {
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  });
-}
 
 // --- THEME LOGIC ---
 const themeBtn = document.getElementById('theme-toggle');
@@ -123,8 +115,8 @@ const renderBag = () => {
     itemDiv.innerHTML = `
       <img src="${item.img}" style="width:50px; height:70px; object-fit:cover; border-radius:5px;">
       <div style="flex:1"><h4>${item.name}</h4><p>${item.price} EGP × ${item.qty}</p></div>
-      <button class="remove-item-btn" data-index="${idx}" style="background:none; border:none; color:var(--text-color); cursor:pointer;">
-        <i data-lucide="x"></i>
+      <button class="remove-item-btn" data-index="${idx}" style="background:none; border:none; color:var(--text-color); cursor:pointer; font-size:24px; line-height:1; padding:4px 8px;">
+        ×
       </button>
     `;
     bagItems.appendChild(itemDiv);

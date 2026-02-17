@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trico style — Modern Fashion</title>
-  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./src/style.css">
@@ -194,31 +193,28 @@
   <nav>
     <div class="logo">Trico style</div>
     <div style="display: flex; gap: 1rem; align-items: center;">
-      <button id="theme-toggle" class="icon-btn">
-        <i data-lucide="moon" id="moon-icon"></i>
-        <i data-lucide="sun" id="sun-icon" style="display:none"></i>
+      <button id="theme-toggle" class="icon-btn" title="Toggle theme">
+        <span id="moon-icon" style="font-size:20px;">🌙</span>
+        <span id="sun-icon" style="display:none; font-size:20px;">☀️</span>
       </button>
-      <button id="btn-cart" class="icon-btn"><i data-lucide="shopping-bag"></i></button>
+      <button id="btn-cart" class="icon-btn" title="Shopping bag">
+        <span style="font-size:20px;">🛒</span>
+      </button>
     </div>
   </nav>
 
   <main class="hero">
     <h1 id="hero-title">TRICO</h1>
     <p>Modern fashion for the confident you. Style with elegance.</p>
-    <a href="#store" class="btn btn-primary">Shop Collection</a>
   </main>
 
-  <section class="products-section" id="store">
-    <div class="grid" id="products-list">
-      <!-- Loading indicator -->
-      <p style="grid-column: 1/-1; text-align:center; opacity:0.5">Fetching collection...</p>
-    </div>
-  </section>
+
+  <!-- Products section removed -->
 
   <!-- Sidebars -->
   <div id="cart-sidebar" class="sidebar">
     <div style="display:flex; justify-content:space-between; margin-bottom:2rem;">
-      <h2>Bag</h2><i data-lucide="x" style="cursor:pointer" id="close-cart"></i>
+      <h2>Bag</h2><span style="cursor:pointer; font-size:28px; font-weight:300; line-height:1;" id="close-cart">×</span>
     </div>
     <div id="cart-items"></div>
     <div id="checkout-box" style="margin-top:2rem; display:none;">
