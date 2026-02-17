@@ -190,7 +190,7 @@ renderBag();
 // GSAP Animations
 gsap.from("#hero-title", { y: 50, opacity: 0, duration: 1.5, ease: "power3.out" });
 gsap.from(".logo", { y: -20, opacity: 0, duration: 1, delay: 0.2 });
-gsap.from("nav .icon-btn", { y: -20, opacity: 0, duration: 1, stagger: 0.1, delay: 0.4 });
+// Removed icon animation to prevent disappearing issue
 
 // Final icon refresh
 // Removed lucide refresh
