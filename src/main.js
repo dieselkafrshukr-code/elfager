@@ -13,11 +13,11 @@ if (themeBtn) {
   const sunIcon = document.getElementById('sun-icon');
   if (moonIcon && sunIcon) {
     if (savedTheme === 'dark') {
-      moonIcon.style.display = 'block';
+      moonIcon.style.display = 'inline-block';
       sunIcon.style.display = 'none';
     } else {
       moonIcon.style.display = 'none';
-      sunIcon.style.display = 'block';
+      sunIcon.style.display = 'inline-block';
     }
   }
 
@@ -29,11 +29,9 @@ if (themeBtn) {
     localStorage.setItem('theme', newTheme);
 
     if (moonIcon && sunIcon) {
-      moonIcon.style.display = isDark ? 'none' : 'block';
-      sunIcon.style.display = isDark ? 'block' : 'none';
+      moonIcon.style.display = isDark ? 'none' : 'inline-block';
+      sunIcon.style.display = isDark ? 'inline-block' : 'none';
     }
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     // Animate transition
     gsap.fromTo('body', { opacity: 0.8 }, { opacity: 1, duration: 0.5 });
@@ -115,8 +113,8 @@ const renderBag = () => {
     itemDiv.innerHTML = `
       <img src="${item.img}" style="width:50px; height:70px; object-fit:cover; border-radius:5px;">
       <div style="flex:1"><h4>${item.name}</h4><p>${item.price} EGP × ${item.qty}</p></div>
-      <button class="remove-item-btn" data-index="${idx}" style="background:none; border:none; color:var(--text-color); cursor:pointer; font-size:24px; line-height:1; padding:4px 8px;">
-        ×
+      <button class="remove-item-btn" data-index="${idx}" style="background:none; border:none; color:var(--text-color); cursor:pointer; padding:4px; display:flex; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     `;
     bagItems.appendChild(itemDiv);
@@ -135,8 +133,6 @@ const renderBag = () => {
   if (document.getElementById('bag-total')) {
     document.getElementById('bag-total').innerText = bag.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString() + " EGP";
   }
-
-  if (typeof lucide !== 'undefined') lucide.createIcons();
 };
 
 const addToBag = (p) => {
@@ -197,4 +193,4 @@ gsap.from(".logo", { y: -20, opacity: 0, duration: 1, delay: 0.2 });
 gsap.from("nav .icon-btn", { y: -20, opacity: 0, duration: 1, stagger: 0.1, delay: 0.4 });
 
 // Final icon refresh
-if (typeof lucide !== 'undefined') lucide.createIcons();
+// Removed lucide refresh
