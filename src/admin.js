@@ -1,21 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
+import { firebaseConfig } from './config.js';
 
-// --- FIREBASE CONFIG ---
-const firebaseConfig = {
-    apiKey: "AIzaSyDKHMmR-Jl9JbqEZtS58XgM42pFftepNb4",
-    authDomain: "m989-5f329.firebaseapp.com",
-    projectId: "m989-5f329",
-    storageBucket: "m989-5f329.firebasestorage.app",
-    messagingSenderId: "617175385217",
-    appId: "1:617175385217:web:2ace1f8e6db4287376f980",
-    measurementId: "G-D8PYFFX4RN"
-};
-
+// --- FIREBASE INITIALIZATION ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 
 // DOM Elements
 const loginOverlay = document.getElementById('login-overlay');

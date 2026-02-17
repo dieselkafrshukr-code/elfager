@@ -2,6 +2,7 @@ import './style.css'
 import { gsap } from 'gsap'
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { firebaseConfig } from './config.js';
 
 // --- THEME LOGIC ---
 const themeToggle = document.getElementById('theme-toggle');
@@ -45,22 +46,10 @@ loginBtn.addEventListener('click', () => toggleSidebar(profileSidebar, true));
 closeProfile.addEventListener('click', () => toggleSidebar(profileSidebar, false));
 
 // --- FIREBASE AUTH ---
-// TODO: Replace with your actual Firebase config
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-// Initialize Firebase (Only if config is provided, otherwise show placeholder)
-let auth;
-if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-  const app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-}
 
 const googleProvider = new GoogleAuthProvider();
 const googleSignInBtn = document.getElementById('google-signin');
@@ -70,37 +59,32 @@ const userNameDisplay = document.getElementById('user-name');
 const logoutBtn = document.getElementById('logout-btn');
 
 googleSignInBtn.addEventListener('click', async () => {
-  if (!auth) {
-    alert("Please configure your Firebase project in src/main.js to enable Google Login.");
-    return;
-  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     console.log("Logged in:", result.user);
   } catch (error) {
     console.error("Login failed:", error);
+    alert("Login failed: " + error.message);
   }
 });
 
 logoutBtn.addEventListener('click', () => {
-  if (auth) signOut(auth);
+  signOut(auth);
 });
 
-if (auth) {
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      authContent.style.display = 'none';
-      userInfo.style.display = 'block';
-      userNameDisplay.innerText = `Welcome, ${user.displayName}`;
-      loginBtn.innerHTML = `<img src="${user.photoURL}" style="width: 30px; border-radius: 50%;">`;
-    } else {
-      authContent.style.display = 'block';
-      userInfo.style.display = 'none';
-      loginBtn.innerHTML = `<i data-lucide="user"></i>`;
-      lucide.createIcons();
-    }
-  });
-}
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    authContent.style.display = 'none';
+    userInfo.style.display = 'block';
+    userNameDisplay.innerText = `Welcome, ${user.displayName}`;
+    loginBtn.innerHTML = `<img src="${user.photoURL}" style="width: 30px; border-radius: 50%;">`;
+  } else {
+    authContent.style.display = 'block';
+    userInfo.style.display = 'none';
+    loginBtn.innerHTML = `<i data-lucide="user"></i>`;
+    lucide.createIcons();
+  }
+});
 
 // --- CART LOGIC (MOCK) ---
 let cart = [];
