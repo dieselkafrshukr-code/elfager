@@ -1,15 +1,4 @@
-// import './style.css' // Removed: browsers can't import CSS in JS directly without a bundler
-// import { gsap } from 'gsap' // Removed: We use the global 'gsap' object from the script tag in HTML
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { firebaseConfig } from './config.js';
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Main JavaScript for Zero Clothing Store
 
 // Check if lucide exists, if not wait for window load
 if (typeof lucide !== 'undefined') {
@@ -69,98 +58,50 @@ const closeSidebar = (id) => {
   if (el) el.classList.remove('active');
 };
 
-const cartBtn = document.getElementById('btn-cart'); // Changed from cart-btn to btn-cart to match HTML
+const cartBtn = document.getElementById('btn-cart');
 if (cartBtn) cartBtn.onclick = () => openSidebar('cart-sidebar');
 
 const closeCart = document.getElementById('close-cart');
 if (closeCart) closeCart.onclick = () => closeSidebar('cart-sidebar');
 
-const loginBtn = document.getElementById('login-btn');
-if (loginBtn) loginBtn.onclick = () => openSidebar('profile-sidebar');
 
-const closeProfile = document.getElementById('close-profile');
-if (closeProfile) closeProfile.onclick = () => closeSidebar('profile-sidebar');
-
-
-// --- FIREBASE AUTH ---
-const googleSignInBtn = document.getElementById('google-login');
-const authView = document.getElementById('auth-view');
-
-if (googleSignInBtn) {
-  googleSignInBtn.addEventListener('click', async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      console.log("Logged in:", result.user);
-    } catch (error) {
-      console.error("Login failed:", error);
-      alert("Login failed: " + error.message);
-    }
-  });
-}
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    if (loginBtn) loginBtn.innerHTML = `<img src="${user.photoURL}" class="user-avatar" title="${user.displayName}">`;
-
-    // Create logout button in auth view if not exists
-    if (authView) {
-      authView.innerHTML = `
-        <div style="text-align:center; padding: 20px;">
-          <img src="${user.photoURL}" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 10px;">
-          <h3>${user.displayName}</h3>
-          <p style="opacity: 0.7; font-size: 0.9em; margin-bottom: 20px;">${user.email}</p>
-          <button id="logout-btn" class="btn btn-primary" style="width:100%">Logout</button>
-          <a href="/admin.html" style="display:block; margin-top:15px; text-decoration:none; opacity:0.6">Go to Admin Dashboard</a>
-        </div>
-      `;
-
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-          signOut(auth);
-        });
-      }
-    }
-  } else {
-    // Show login icon
-    if (loginBtn) loginBtn.innerHTML = `<i data-lucide="user"></i>`;
-
-    // Reset auth view
-    if (authView) {
-      authView.innerHTML = `
-        <button id="google-login" class="btn" style="width:100%; margin-bottom:10px;">Login with Google</button>
-        <a href="/admin.html" style="display:block; text-align:center; opacity:0.5; text-decoration:none; margin-top:10px;">Admin Login</a>
-      `;
-      // Re-attach listener
-      const newLoginBtn = document.getElementById('google-login');
-      if (newLoginBtn) {
-        newLoginBtn.onclick = async () => {
-          const provider = new GoogleAuthProvider();
-          try {
-            await signInWithPopup(auth, provider);
-          } catch (e) { alert(e.message); }
-        };
-      }
-    }
-
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+// --- STATIC PRODUCTS DATA ---
+const products = [
+  {
+    id: "1",
+    name: "Classic Tee - Black",
+    price_now: 450,
+    main_image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
+  },
+  {
+    id: "2",
+    name: "Minimalist Hoodie",
+    price_now: 850,
+    main_image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
+  },
+  {
+    id: "3",
+    name: "Signature Cap",
+    price_now: 300,
+    main_image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
+  },
+  {
+    id: "4",
+    name: "Urban Jacket",
+    price_now: 1200,
+    main_image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60"
   }
-});
+];
 
-
-// --- PRODUCTS LOGIC ---
+// --- PRODUCTS DISPLAY ---
 const prodList = document.getElementById('products-list');
 if (prodList) {
-  onSnapshot(collection(db, "products"), snap => {
-    if (snap.empty) {
-      prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">No products available yet.</p>`;
-      return;
-    }
-    prodList.innerHTML = "";
-    snap.forEach(d => {
-      const p = d.data();
-      if (p.visible === false) return;
+  // Render static products
+  prodList.innerHTML = "";
+  if (products.length === 0) {
+    prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; opacity:0.5">No products available.</p>`;
+  } else {
+    products.forEach(p => {
       const card = document.createElement('div');
       card.className = "product-card";
       card.innerHTML = `
@@ -169,7 +110,7 @@ if (prodList) {
                       <h3>${p.name}</h3>
                       <p class="p-price">${p.price_now} EGP</p>
                       <button class="btn btn-primary add-btn" style="width:100%; margin-top:1rem; padding:0.8rem; font-size:0.8rem;" 
-                          data-id="${d.id}" data-name="${p.name}" data-price="${p.price_now}" data-img="${p.main_image}">
+                          data-id="${p.id}" data-name="${p.name}" data-price="${p.price_now}" data-img="${p.main_image}">
                           Add to Bag
                       </button>
                   </div>
@@ -183,10 +124,7 @@ if (prodList) {
         openSidebar('cart-sidebar');
       };
     });
-  }, err => {
-    console.error(err);
-    prodList.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:red">Error loading products. Check console.</p>`;
-  });
+  }
 }
 
 // --- BAG LOGIC ---
@@ -232,10 +170,10 @@ window.ripBag = (idx) => {
   renderBag();
 };
 
-// Checkout
+// --- SIMULATED CHECKOUT ---
 const checkoutBtn = document.getElementById('checkout-btn');
 if (checkoutBtn) {
-  checkoutBtn.onclick = async (e) => {
+  checkoutBtn.onclick = (e) => {
     const name = document.getElementById('c-name').value;
     const phone = document.getElementById('c-phone').value;
     const addr = document.getElementById('c-addr').value;
@@ -244,41 +182,22 @@ if (checkoutBtn) {
     e.target.disabled = true;
     e.target.innerText = "Processing...";
 
-    try {
-      await addDoc(collection(db, "orders"), {
-        customer_name: name,
-        phone,
-        address: addr,
-        items: bag,
-        total_price: bag.reduce((s, i) => s + (i.price * i.qty), 0),
-        status: 'Pending',
-        createdAt: new Date()
-      });
-      alert("Order Placed Successfully!");
+    // Simulate network request
+    setTimeout(() => {
+      alert(`Order Placed Successfully! \n(This is a demo, no data was sent).\n\nCustomer: ${name}\nTotal: ${bag.reduce((s, i) => s + (i.price * i.qty), 0)} EGP`);
       bag = [];
       localStorage.setItem('bag', "[]");
       renderBag();
       closeSidebar('cart-sidebar');
-    } catch (err) {
-      alert("Error: " + err.message);
-    } finally {
+
       e.target.disabled = false;
       e.target.innerText = "Order Now";
-    }
+    }, 1500);
   };
 }
 
 // Initial Render of Bag
 renderBag();
-
-
-// --- VISITOR TRACKING ---
-// Simple session-based tracking
-if (!sessionStorage.getItem('v_tracked')) {
-  sessionStorage.setItem('v_tracked', '1');
-  const counterRef = doc(db, "stats", "counters");
-  setDoc(counterRef, { total_visitors: increment(1) }, { merge: true });
-}
 
 // GSAP Animations
 gsap.from("#hero-title", { y: 50, opacity: 0, duration: 1.5, ease: "power3.out" });

@@ -1,7 +1,7 @@
 {
-  "name": "-",
+  "name": "zero-clothing",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,11 +9,6 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "firebase-admin": "^13.6.1",
     "vite": "^7.3.1"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.95.3",
-    "firebase": "^12.9.0"
   }
 }
