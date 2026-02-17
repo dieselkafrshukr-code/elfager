@@ -178,6 +178,8 @@
       padding: 3rem;
       transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
       border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
     }
 
     .sidebar.active {
@@ -293,10 +295,10 @@
       <textarea id="c-addr" placeholder="Address"
         style="width:100%; padding:10px; margin-bottom:10px; background:var(--card-bg); border:1px solid var(--border-color); color:var(--text-color);"></textarea>
       <button id="checkout-btn" class="btn btn-primary" style="width:100%">إرسال الطلب عبر واتساب</button>
-      <a href="./admin.html"
-        style="display:block; text-align:center; margin-top:1.5rem; opacity:0.3; font-size:0.7rem; text-decoration:none; color:var(--text-color);">⚙️
-        Admin Dashboard</a>
     </div>
+    <a href="./admin.html"
+      style="display:block; text-align:center; margin-top:auto; padding-top:2rem; opacity:0.3; font-size:0.7rem; text-decoration:none; color:var(--text-color);">⚙️
+      Admin Dashboard</a>
   </div>
 
   <script type="module" src="./src/main.js"></script>
