@@ -10,32 +10,133 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Set Persistence to Session (Login required per session)
-// This ensures that when the page is reloaded, it stays logged in only for that session
-// But to force login EVERY reload as requested, we can use none or just signOut on load
-setPersistence(auth, browserSessionPersistence);
+// 1. Force Clear Session on every Page Load
+signOut(auth).then(() => console.log("Session cleared."));
 
 const loginView = document.getElementById('login-view');
 const adminContent = document.getElementById('admin-content');
 const loginForm = document.getElementById('login-form');
 const logoutBtn = document.getElementById('logout-btn');
 
-// Force Logout on initial load to ensure login is required every time
-let isNewLogin = false;
+// Flag to track fresh manual login
+let authenticated = false;
 
 // Auth State Listener
 onAuthStateChanged(auth, (user) => {
-    if (user && isNewLogin) {
+    if (user && authenticated) {
         loginView.style.display = 'none';
         adminContent.style.display = 'block';
         loadProducts();
-        loadOrders(); // Load orders on login
+        loadOrders();
     } else {
-        if (user) signOut(auth); // Log out if session restored but wasn't a fresh login
         loginView.style.display = 'block';
         adminContent.style.display = 'none';
     }
 });
+
+// Login Handler
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        authenticated = true; // Set flag only after manual login success
+    } catch (error) {
+        alert("خطأ في تسجيل الدخول: " + error.message);
+    }
+});
+
+// Logout Handler
+logoutBtn.onclick = () => { authenticated = false; signOut(auth); };
+
+// Add Product with Detailed Error Logging
+const form = document.getElementById('add-product-form');
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fileInput = document.getElementById('p-image-file');
+    const file = fileInput.files[0];
+    if (!file) return alert("الرجاء اختيار صورة أولاً");
+
+    const progressDiv = document.getElementById('upload-progress');
+    const progressPct = document.getElementById('progress-pct');
+    progressDiv.style.display = 'block';
+    progressPct.innerText = '0%';
+
+    try {
+        console.log("Starting upload:", file.name);
+        const storageRef = ref(storage, 'products/' + Date.now() + '_' + file.name);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                progressPct.innerText = Math.round(progress) + '%';
+            },
+            (error) => {
+                console.error("Storage Error:", error);
+                alert("فشل في رفع الصورة: " + error.message + "\nتأكد من تفعيل Storage في Firebase Console.");
+                progressDiv.style.display = 'none';
+            },
+            async () => {
+                try {
+                    console.log("Upload done, getting URL...");
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+                    console.log("Saving to Firestore...");
+                    const productData = {
+                        name: document.getElementById('p-name').value,
+                        image: downloadURL,
+                        sizes: document.getElementById('p-sizes').value,
+                        priceNow: parseFloat(document.getElementById('p-price-now').value),
+                        priceBefore: document.getElementById('p-price-before').value ? parseFloat(document.getElementById('p-price-before').value) : null,
+                        createdAt: new Date()
+                    };
+
+                    await addDoc(collection(db, "products"), productData);
+                    console.log("Success!");
+                    alert("✅ تم إضافة المنتج بنجاح!");
+                    progressDiv.style.display = 'none';
+                    form.reset();
+                } catch (dbError) {
+                    console.error("Database Error:", dbError);
+                    alert("خطأ في حفظ البيانات: " + dbError.message);
+                    progressDiv.style.display = 'none';
+                }
+            }
+        );
+    } catch (error) {
+        console.error("General Error:", error);
+        alert("حدث خطأ غير متوقع: " + error.message);
+        progressDiv.style.display = 'none';
+    }
+});
+
+// Load Products
+function loadProducts() {
+    const productsContainer = document.getElementById('products-container');
+    onSnapshot(collection(db, "products"), (snapshot) => {
+        productsContainer.innerHTML = "";
+        snapshot.forEach((docSnapshot) => {
+            const p = docSnapshot.data();
+            const div = document.createElement('div');
+            div.className = "product-item";
+            div.innerHTML = `
+        <span>${p.name} - ${p.priceNow} EGP</span>
+        <button class="delete-btn" data-id="${docSnapshot.id}">حذف</button>
+      `;
+            productsContainer.appendChild(div);
+        });
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.onclick = async () => {
+                if (confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
+                    await deleteDoc(doc(db, "products", btn.dataset.id));
+                }
+            };
+        });
+    });
+}
 
 // Load Orders
 function loadOrders() {
@@ -77,92 +178,3 @@ function loadOrders() {
     });
 }
 
-// Login Handler
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-password').value;
-    try {
-        isNewLogin = true;
-        await signInWithEmailAndPassword(auth, email, pass);
-    } catch (error) {
-        alert("خطأ في تسجيل الدخول: " + error.message);
-    }
-});
-
-// Logout Handler
-logoutBtn.onclick = () => { isNewLogin = false; signOut(auth); };
-
-// Add Product with Image Upload
-const form = document.getElementById('add-product-form');
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const file = document.getElementById('p-image-file').files[0];
-    if (!file) return alert("الرجاء اختيار صورة");
-
-    const progressDiv = document.getElementById('upload-progress');
-    const progressPct = document.getElementById('progress-pct');
-    progressDiv.style.display = 'block';
-
-    try {
-        // 1. Upload Image to Firebase Storage
-        const storageRef = ref(storage, 'products/' + Date.now() + '_' + file.name);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressPct.innerText = Math.round(progress) + '%';
-            },
-            (error) => { alert("خطأ في رفع الصورة"); },
-            async () => {
-                // 2. Get Download URL
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-                // 3. Save Product to Firestore
-                const productData = {
-                    name: document.getElementById('p-name').value,
-                    image: downloadURL, // Link from Storage
-                    sizes: document.getElementById('p-sizes').value,
-                    priceNow: parseFloat(document.getElementById('p-price-now').value),
-                    priceBefore: document.getElementById('p-price-before').value ? parseFloat(document.getElementById('p-price-before').value) : null,
-                    createdAt: new Date()
-                };
-
-                await addDoc(collection(db, "products"), productData);
-                alert("تم إضافة المنتج بنجاح!");
-                progressDiv.style.display = 'none';
-                form.reset();
-            }
-        );
-    } catch (error) {
-        console.error(error);
-        alert("حدث خطأ أثناء إضافة المنتج.");
-    }
-});
-
-// Load Products
-function loadProducts() {
-    const productsContainer = document.getElementById('products-container');
-    onSnapshot(collection(db, "products"), (snapshot) => {
-        productsContainer.innerHTML = "";
-        snapshot.forEach((docSnapshot) => {
-            const p = docSnapshot.data();
-            const div = document.createElement('div');
-            div.className = "product-item";
-            div.innerHTML = `
-        <span>${p.name} - ${p.priceNow} EGP</span>
-        <button class="delete-btn" data-id="${docSnapshot.id}">حذف</button>
-      `;
-            productsContainer.appendChild(div);
-        });
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.onclick = async () => {
-                if (confirm("هل أنت متأكد من حذف هذا المنتج؟")) {
-                    await deleteDoc(doc(db, "products", btn.dataset.id));
-                }
-            };
-        });
-    });
-}
