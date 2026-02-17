@@ -16,8 +16,8 @@ const productForm = document.getElementById('add-product-form');
 
 let editId = null;
 
-// --- 1. Force Logout on Load for non-persistent sessions ---
-signOut(auth);
+// --- 1. Fresh state on load ---
+// Instead of signOut at the top, we rely on onAuthStateChanged to set the initial view.
 
 // --- 2. Auth State Listener ---
 onAuthStateChanged(auth, (user) => {
@@ -45,11 +45,17 @@ loginForm.addEventListener('submit', async (e) => {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
     } catch (err) {
-        console.error(err);
-        let msg = "بيانات الدخول خاطئة!";
-        if (err.code === "auth/user-not-found") msg = "هذا الحساب غير موجود في Firebase!";
-        if (err.code === "auth/wrong-password") msg = "كلمة المرور غير صحيحة!";
-        if (err.code === "auth/operation-not-allowed") msg = "يجب تفعيل Email/Password في Firebase Console!";
+        console.error("Firebase Auth Error:", err.code, err.message);
+        let msg = "حدث خطأ: " + err.message;
+
+        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+            msg = "بيانات الدخول غير صحيحة! تأكد من الإيميل والباسورد المضافين في Firebase.";
+        } else if (err.code === "auth/operation-not-allowed") {
+            msg = "يجب تفعيل Email/Password في خيار Sign-in Method في Firebase!";
+        } else if (err.code === "auth/too-many-requests") {
+            msg = "محاولات كثيرة خاطئة! الحساب محظور مؤقتاً.";
+        }
+
         alert(msg);
     } finally {
         btn.innerText = "دخول";
